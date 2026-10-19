@@ -45,6 +45,8 @@ function saveAdminState(key) {
     localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AdminState.gallery));
   } else if (key === 'registrations') {
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(AdminState.registrations));
+  } else if (key === 'speakers') {
+    localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AdminState.speakers));
   }
 }
 
@@ -72,16 +74,19 @@ function switchAdminTab(tabId) {
 function renderAdminMetrics() {
   const totalSubmissions = AdminState.registrations.length;
   const approvedPapers = AdminState.registrations.filter(r => r.status === 'Accepted').length;
+  const speakersCount = AdminState.speakers.length;
   const galleryCount = AdminState.gallery.length;
   const publishedSessions = AdminState.schedule.filter(s => s.status !== 'unpublished').length;
 
   const totalEl = document.getElementById('metric-total-submissions');
   const approvedEl = document.getElementById('metric-approved-papers');
+  const speakersEl = document.getElementById('metric-speakers-count');
   const galleryEl = document.getElementById('metric-gallery-count');
   const sessionEl = document.getElementById('metric-session-status');
 
   if (totalEl) totalEl.textContent = totalSubmissions;
   if (approvedEl) approvedEl.textContent = approvedPapers;
+  if (speakersEl) speakersEl.textContent = `${speakersCount} Scholars`;
   if (galleryEl) galleryEl.textContent = galleryCount;
   if (sessionEl) sessionEl.textContent = `${publishedSessions} Live`;
 }
@@ -107,6 +112,10 @@ function renderAdminScheduleTable() {
       </td>
       <td>
         <div class="action-btn-group">
+          <button class="btn-table-action edit" onclick="openEditSessionModal('${session.id}')" title="Edit Session Details">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            Edit
+          </button>
           <button class="btn-table-action" onclick="togglePublishSession('${session.id}')">
             ${session.status === 'unpublished' ? 'Publish' : 'Unpublish'}
           </button>
@@ -162,6 +171,300 @@ function deleteSession(sessionId) {
   renderAdminScheduleTable();
   renderAdminMetrics();
   showToast('Session Removed', 'Session deleted from schedule.');
+}
+
+function openEditSessionModal(sessionId) {
+  const session = AdminState.schedule.find(s => s.id === sessionId);
+  if (!session) return;
+
+  document.getElementById('edit-session-id').value = session.id;
+  document.getElementById('edit-session-timeStart').value = session.timeStart;
+  document.getElementById('edit-session-timeEnd').value = session.timeEnd;
+  document.getElementById('edit-session-track').value = session.track;
+  document.getElementById('edit-session-title').value = session.title;
+  document.getElementById('edit-session-venue').value = session.venue;
+  document.getElementById('edit-session-speaker').value = session.speaker;
+  document.getElementById('edit-session-chair').value = session.chair || '';
+  document.getElementById('edit-session-description').value = session.description;
+  document.getElementById('edit-session-abstract').value = session.abstract || session.description;
+
+  const modal = document.getElementById('session-edit-modal');
+  if (modal) modal.classList.add('open');
+}
+
+function handleUpdateSession(e) {
+  e.preventDefault();
+  const form = e.target;
+  const id = form.id.value;
+  const session = AdminState.schedule.find(s => s.id === id);
+  if (!session) return;
+
+  session.timeStart = form.timeStart.value.trim();
+  session.timeEnd = form.timeEnd.value.trim();
+  session.track = form.track.value;
+  session.title = form.title.value.trim();
+  session.venue = form.venue.value.trim();
+  session.speaker = form.speaker.value.trim();
+  session.chair = form.chair.value.trim();
+  session.description = form.description.value.trim();
+  session.abstract = form.abstract.value.trim() || session.description;
+
+  saveAdminState('schedule');
+  renderAdminScheduleTable();
+  renderAdminMetrics();
+  closeModal('session-edit-modal');
+  showToast('Session Updated', `"${session.title}" updated successfully.`);
+}
+
+// ==========================================
+// TAB: FACULTY & SPEAKERS MANAGER
+// ==========================================
+
+let pendingNewSpeakerImage = '';
+let pendingEditSpeakerImage = '';
+
+function renderAdminSpeakersTable() {
+  const tbody = document.getElementById('admin-speakers-tbody');
+  if (!tbody) return;
+
+  if (AdminState.speakers.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align: center; padding: 2rem; color: var(--neutral-mid);">
+          No faculty scholars registered yet. Use the form above to add a scholar.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = AdminState.speakers.map(speaker => `
+    <tr>
+      <td>
+        <img src="${speaker.image}" alt="${speaker.name}" class="speaker-admin-avatar" onerror="this.onerror=null; this.src='element.png';">
+      </td>
+      <td>
+        <div style="font-weight: 800; color: var(--neutral-dark); font-size: 0.95rem;">${speaker.name}</div>
+        <div style="font-size: 0.8rem; font-weight: 600; color: var(--primary-emerald);">${speaker.role}</div>
+      </td>
+      <td style="font-size: 0.85rem; color: var(--neutral-dark-muted); max-width: 200px;">
+        ${speaker.affiliation}
+      </td>
+      <td style="font-size: 0.85rem; max-width: 250px; font-weight: 500;">
+        <em>"${speaker.topic}"</em>
+      </td>
+      <td>
+        <div class="action-btn-group">
+          <button class="btn-table-action edit" onclick="openEditSpeakerModal('${speaker.id}')" title="Edit Scholar Dossier">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            Edit
+          </button>
+          <button class="btn-table-action decline" onclick="deleteSpeaker('${speaker.id}')" title="Remove Scholar">
+            Delete
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function handleAddSpeaker(e) {
+  e.preventDefault();
+  const form = e.target;
+  const name = form.name.value.trim();
+  const role = form.role.value.trim();
+  const affiliation = form.affiliation.value.trim();
+  const topic = form.topic.value.trim();
+  const bio = form.bio.value.trim();
+  const urlFallback = form.imageUrl.value.trim();
+
+  const finalImage = pendingNewSpeakerImage || urlFallback || 'element.png';
+
+  const newSpeaker = {
+    id: `spk-${Date.now()}`,
+    name: name,
+    role: role,
+    affiliation: affiliation,
+    topic: topic,
+    bio: bio,
+    image: finalImage
+  };
+
+  AdminState.speakers.push(newSpeaker);
+  saveAdminState('speakers');
+  renderAdminSpeakersTable();
+  renderAdminMetrics();
+
+  form.reset();
+  pendingNewSpeakerImage = '';
+  const previewBox = document.getElementById('speaker-new-preview-box');
+  if (previewBox) previewBox.style.display = 'none';
+
+  showToast('Scholar Profile Published', `"${newSpeaker.name}" added to the faculty plenary.`);
+}
+
+function clearNewSpeakerPhoto() {
+  pendingNewSpeakerImage = '';
+  const fileInput = document.getElementById('speaker-new-file-input');
+  if (fileInput) fileInput.value = '';
+  const previewBox = document.getElementById('speaker-new-preview-box');
+  if (previewBox) previewBox.style.display = 'none';
+}
+
+function openEditSpeakerModal(speakerId) {
+  const speaker = AdminState.speakers.find(s => s.id === speakerId);
+  if (!speaker) return;
+
+  pendingEditSpeakerImage = '';
+  document.getElementById('edit-speaker-id').value = speaker.id;
+  document.getElementById('edit-speaker-name').value = speaker.name;
+  document.getElementById('edit-speaker-role').value = speaker.role;
+  document.getElementById('edit-speaker-affiliation').value = speaker.affiliation;
+  document.getElementById('edit-speaker-topic').value = speaker.topic;
+  document.getElementById('edit-speaker-bio').value = speaker.bio;
+  document.getElementById('edit-speaker-image-url').value = speaker.image || '';
+
+  const previewImg = document.getElementById('edit-speaker-preview-img');
+  if (previewImg) {
+    previewImg.src = speaker.image || 'element.png';
+  }
+
+  const modal = document.getElementById('speaker-edit-modal');
+  if (modal) modal.classList.add('open');
+}
+
+function handleUpdateSpeaker(e) {
+  e.preventDefault();
+  const form = e.target;
+  const id = form.id.value;
+  const speaker = AdminState.speakers.find(s => s.id === id);
+  if (!speaker) return;
+
+  const urlInput = form.image.value.trim();
+  const finalImage = pendingEditSpeakerImage || urlInput || speaker.image || 'element.png';
+
+  speaker.name = form.name.value.trim();
+  speaker.role = form.role.value.trim();
+  speaker.affiliation = form.affiliation.value.trim();
+  speaker.topic = form.topic.value.trim();
+  speaker.bio = form.bio.value.trim();
+  speaker.image = finalImage;
+
+  saveAdminState('speakers');
+  renderAdminSpeakersTable();
+  renderAdminMetrics();
+  closeModal('speaker-edit-modal');
+  pendingEditSpeakerImage = '';
+  showToast('Faculty Dossier Updated', `Profile details for "${speaker.name}" saved successfully.`);
+}
+
+function deleteSpeaker(speakerId) {
+  const speaker = AdminState.speakers.find(s => s.id === speakerId);
+  const name = speaker ? speaker.name : 'this scholar';
+  if (!confirm(`Are you sure you want to remove ${name} from the keynote faculty?`)) return;
+
+  AdminState.speakers = AdminState.speakers.filter(s => s.id !== speakerId);
+  saveAdminState('speakers');
+  renderAdminSpeakersTable();
+  renderAdminMetrics();
+  showToast('Scholar Profile Removed', 'Scholar profile removed from faculty plenary.');
+}
+
+function setupSpeakerDropzone() {
+  // New Speaker Dropzone
+  const dropzone = document.getElementById('speaker-new-dropzone');
+  const fileInput = document.getElementById('speaker-new-file-input');
+  const previewBox = document.getElementById('speaker-new-preview-box');
+  const previewImg = document.getElementById('speaker-new-preview-img');
+  const urlInput = document.getElementById('speaker-new-url-input');
+
+  if (dropzone && fileInput) {
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('dragover');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processNewSpeakerFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        processNewSpeakerFile(e.target.files[0]);
+      }
+    });
+  }
+
+  function processNewSpeakerFile(file) {
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file (PNG, JPG, or WEBP).');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      pendingNewSpeakerImage = event.target.result;
+      if (previewBox && previewImg) {
+        previewImg.src = pendingNewSpeakerImage;
+        previewBox.style.display = 'flex';
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Edit Speaker File Input
+  const editFileInput = document.getElementById('edit-speaker-file-input');
+  const editPreviewImg = document.getElementById('edit-speaker-preview-img');
+  const editUrlInput = document.getElementById('edit-speaker-image-url');
+
+  if (editFileInput) {
+    editFileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        if (!file.type.startsWith('image/')) {
+          alert('Please select an image file.');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          pendingEditSpeakerImage = event.target.result;
+          if (editPreviewImg) editPreviewImg.src = pendingEditSpeakerImage;
+          if (editUrlInput) editUrlInput.value = '';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  if (editUrlInput) {
+    editUrlInput.addEventListener('input', () => {
+      if (editUrlInput.value.trim() && editPreviewImg) {
+        editPreviewImg.src = editUrlInput.value.trim();
+        pendingEditSpeakerImage = '';
+      }
+    });
+  }
+
+  if (urlInput) {
+    urlInput.addEventListener('input', () => {
+      if (urlInput.value.trim()) {
+        pendingNewSpeakerImage = '';
+        if (previewBox && previewImg) {
+          previewImg.src = urlInput.value.trim();
+          previewBox.style.display = 'flex';
+        }
+      }
+    });
+  }
 }
 
 // ==========================================
@@ -487,11 +790,30 @@ document.addEventListener('DOMContentLoaded', () => {
   initAdminStorage();
   renderAdminMetrics();
   renderAdminScheduleTable();
+  renderAdminSpeakersTable();
   renderAdminRegistrationsTable();
   setupDropzone();
+  setupSpeakerDropzone();
 
   const regSearchInput = document.getElementById('admin-reg-search');
   if (regSearchInput) {
     regSearchInput.addEventListener('input', renderAdminRegistrationsTable);
+  }
+});
+
+// Cross-tab synchronization
+window.addEventListener('storage', (e) => {
+  if (e.key === STORAGE_KEYS.SPEAKERS) {
+    AdminState.speakers = JSON.parse(e.newValue || '[]');
+    renderAdminSpeakersTable();
+    renderAdminMetrics();
+  } else if (e.key === STORAGE_KEYS.SCHEDULE) {
+    AdminState.schedule = JSON.parse(e.newValue || '[]');
+    renderAdminScheduleTable();
+    renderAdminMetrics();
+  } else if (e.key === STORAGE_KEYS.REGISTRATIONS) {
+    AdminState.registrations = JSON.parse(e.newValue || '[]');
+    renderAdminRegistrationsTable();
+    renderAdminMetrics();
   }
 });

@@ -53,6 +53,8 @@ function saveState(key) {
     localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AppState.gallery));
   } else if (key === 'registrations') {
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(AppState.registrations));
+  } else if (key === 'speakers') {
+    localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AppState.speakers));
   }
 }
 
@@ -161,7 +163,7 @@ function renderSpeakers() {
   container.innerHTML = AppState.speakers.map(speaker => `
     <div class="speaker-card">
       <div class="speaker-photo-wrap">
-        <img src="${speaker.image}" alt="${speaker.name}" class="speaker-photo" loading="lazy">
+        <img src="${speaker.image}" alt="${speaker.name}" class="speaker-photo" loading="lazy" onerror="this.onerror=null; this.src='element.png';">
         <div class="speaker-badge-overlay">Keynote Faculty</div>
       </div>
       <div class="speaker-info">
@@ -185,7 +187,7 @@ function openSpeakerModal(speakerId) {
 
   body.innerHTML = `
     <div style="display: flex; gap: 1.5rem; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap;">
-      <img src="${speaker.image}" alt="${speaker.name}" style="width: 120px; height: 120px; border-radius: var(--radius-md); object-fit: cover; border: 2px solid var(--primary-emerald);">
+      <img src="${speaker.image}" alt="${speaker.name}" onerror="this.onerror=null; this.src='element.png';" style="width: 120px; height: 120px; border-radius: var(--radius-md); object-fit: cover; border: 2px solid var(--primary-emerald); background: var(--surface-muted);">
       <div style="flex: 1;">
         <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--neutral-dark); margin-bottom: 0.25rem;">${speaker.name}</h3>
         <p style="font-size: 0.92rem; font-weight: 700; color: var(--primary-emerald); margin-bottom: 0.25rem;">${speaker.role}</p>
@@ -631,4 +633,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial routing
   const initialHash = window.location.hash.replace('#', '') || 'home';
   navigateTo(initialHash);
+});
+
+// Cross-tab synchronization with admin console
+window.addEventListener('storage', (e) => {
+  if (e.key === STORAGE_KEYS.SPEAKERS) {
+    AppState.speakers = JSON.parse(e.newValue || '[]');
+    renderSpeakers();
+  } else if (e.key === STORAGE_KEYS.SCHEDULE) {
+    AppState.schedule = JSON.parse(e.newValue || '[]');
+    renderSchedule();
+  } else if (e.key === STORAGE_KEYS.GALLERY) {
+    AppState.gallery = JSON.parse(e.newValue || '[]');
+    renderGallery();
+  }
 });

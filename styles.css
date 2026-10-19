@@ -1506,7 +1506,7 @@ a {
 /* Quick Metrics Bar */
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2.5rem;
 }
@@ -1836,6 +1836,22 @@ textarea.form-control {
   background: #DC3545;
   color: #FFFFFF;
   border-color: #DC3545;
+}
+
+.btn-table-action.edit:hover {
+  background: var(--surface-deep-petrol);
+  color: #FFFFFF;
+  border-color: var(--surface-deep-petrol);
+}
+
+.speaker-admin-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  border: 2px solid var(--primary-emerald);
+  background: var(--surface-muted);
+  display: block;
 }
 
 /* Table Search & Export Bar */
