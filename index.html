@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tafsir Symposium 2026 | Department of Quranic Exegesis & SABCeR, Ma'din Academy</title>
+  <meta name="description" content="International Academic Symposium on Quranic Exegesis, Hermeneutics & Contemporary Discourse. Organized by the Department of Quranic Exegesis in collaboration with SABCeR and Ma'din Academy.">
+  
+  <!-- Favicon / Visual branding -->
+  <link rel="icon" type="image/png" href="element.png">
+  
+  <!-- Design System CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ==========================================
+       TOP NAVIGATION BAR
+       ========================================== -->
+  <header class="top-nav" id="main-header">
+    <div class="container nav-container">
+      
+      <!-- Brand & Logos -->
+      <a href="#home" class="nav-brand" onclick="navigateTo('home'); return false;" aria-label="Tafsir Symposium 2026 - Ma'din Academy and SABCeR">
+        <div class="nav-logos">
+          <div class="logo-frame" title="Ma'din Academy">
+            <img src="MA'DIN ACADEMY LOGO.png" alt="Ma'din Academy Logo" class="logo-madin">
+          </div>
+          <div class="logo-divider"></div>
+          <div class="logo-frame" title="SABCeR - Sayyid Ahmedul Bukhari Center for Research">
+            <img src="SABCeR-06.png" alt="SABCeR Logo" class="logo-sabcer">
+          </div>
+        </div>
+      </a>
+
+      <!-- Center Nav Links -->
+      <nav class="nav-menu" aria-label="Main Navigation">
+        <a href="#home" class="nav-link active" data-view="home" onclick="navigateTo('home'); return false;">
+          <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          Home / About
+        </a>
+        <a href="#schedule" class="nav-link" data-view="schedule" onclick="navigateTo('schedule'); return false;">
+          <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+          Schedule
+        </a>
+        <a href="#album" class="nav-link" data-view="album" onclick="navigateTo('album'); return false;">
+          <svg viewBox="0 0 24 24"><path d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11-4l2.03 2.71L16 11l4 5H8l3-4zM2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z"/></svg>
+          Album
+        </a>
+      </nav>
+
+      <!-- Right Action CTA -->
+      <div class="nav-actions">
+        <button class="btn-cta" onclick="openRegistrationModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <line x1="20" y1="8" x2="20" y2="14"></line>
+            <line x1="23" y1="11" x2="17" y2="11"></line>
+          </svg>
+          Register Now
+        </button>
+
+        <!-- Mobile Menu Toggle Button -->
+        <button class="mobile-menu-btn" onclick="toggleMobileDrawer()" aria-label="Toggle Navigation Menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Mobile Drawer Backdrop Overlay -->
+    <div class="mobile-drawer-backdrop" id="mobile-drawer-backdrop" onclick="closeMobileDrawer()"></div>
+
+    <!-- Mobile Drawer Navigation (Half-width) -->
+    <div class="mobile-drawer" id="mobile-drawer">
+      <div class="mobile-drawer-header">
+        <span class="mobile-drawer-title">Navigation</span>
+        <button class="mobile-drawer-close" onclick="closeMobileDrawer()" aria-label="Close navigation">&times;</button>
+      </div>
+      <div class="mobile-menu-links">
+        <a href="#home" class="mobile-link active" data-view="home" onclick="navigateTo('home'); return false;">
+          Home / About
+        </a>
+        <a href="#schedule" class="mobile-link" data-view="schedule" onclick="navigateTo('schedule'); return false;">
+          Schedule
+        </a>
+        <a href="#album" class="mobile-link" data-view="album" onclick="navigateTo('album'); return false;">
+          Album
+        </a>
+      </div>
+      <button class="btn-cta" style="width: 100%; justify-content: center;" onclick="openRegistrationModal()">
+        Register Now
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ==========================================
+         PAGE 1: PUBLIC PAGE (Home, Theme & About)
+         ========================================== -->
+    <section id="view-home" class="page-view active-view">
+      
+      <!-- HERO SECTION -->
+      <div class="hero-section">
+        <!-- Floating background motifs using element.png -->
+        <img src="element.png" alt="" class="hero-watermark" aria-hidden="true">
+        <img src="element.png" alt="" class="hero-watermark-secondary" aria-hidden="true">
+
+        <div class="container hero-content">
+          <!-- Institutional pill -->
+          <div class="hero-institution-pill">
+            <span class="pill-dot"></span>
+            Department of Quranic Exegesis • Ma'din Academy &amp; SABCeR Research Council
+          </div>
+
+          <!-- Main Title Graphic -->
+          <div class="hero-title-container">
+            <img src="title symposium.png" alt="Tafsir Symposium 2026" class="hero-title-image">
+          </div>
+
+          <!-- Subtitle -->
+          <h1 class="hero-subtitle">
+            International Academic Symposium on Quranic Exegesis, Hermeneutics &amp; Contemporary Discourse
+          </h1>
+
+          <!-- Meta Chips -->
+          <div class="hero-meta-strip">
+            <span class="meta-chip">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+              Hybrid Academic Sessions
+            </span>
+            <span class="meta-chip">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              Peer-Reviewed Proceedings
+            </span>
+            <span class="meta-chip">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+              Global Scholarly Fellowship
+            </span>
+          </div>
+
+          <!-- Event Date Emblem -->
+          <div class="hero-date-wrap">
+            <img src="date.png" alt="21 October 2026 Wednesday" class="hero-date-img">
+          </div>
+
+          <!-- Hero CTA Buttons -->
+          <div class="hero-cta-group">
+            <button class="btn-petrol" onclick="navigateTo('schedule')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              View Schedule
+            </button>
+            <button class="btn-emerald" onclick="openRegistrationModal()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="8.5" cy="7" r="4"></circle>
+                <line x1="20" y1="8" x2="20" y2="14"></line>
+                <line x1="23" y1="11" x2="17" y2="11"></line>
+              </svg>
+              Register Now
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ABOUT THE SYMPOSIUM SECTION -->
+      <section class="section">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Intellectual Foundation</span>
+            <h2>Bridging Classical Exegesis &amp; Contemporary Hermeneutics</h2>
+            <p>A flagship international gathering examining the methodologies, ontological anchors, and living applications of Quranic scholarship.</p>
+          </div>
+
+          <div class="about-grid">
+            <!-- Left Column: Department Mission & Context -->
+            <div class="about-text-col">
+              <h3>Department of Quranic Exegesis: A Tradition of Scholarly Rigor</h3>
+              <p class="about-lead">
+                Established as the nexus of classical Arabic philology and hermeneutical inquiry, the Department of Quranic Exegesis fosters critical scholarship at the highest academic echelon.
+              </p>
+              <p class="about-p">
+                In an era characterized by accelerated epistemological disruption and algorithmic information networks, the "Tafsir Symposium 2026" convenes global scholars, research fellows, and postgraduates to interrogate the continuities and dialectics within Islamic exegetical heritage.
+              </p>
+              <p class="about-p">
+                Organized under the patronage of Ma'din Academy in academic synergy with SABCeR (Sayyid Ahmedul Bukhari Center for Research), this symposium serves as an international forum validating classical <em>Usul</em> while addressing pressing modern dilemmas across bioethics, digital humanities, and socio-cultural reform.
+              </p>
+
+              <div class="about-pillars">
+                <div class="pillar-item">
+                  <div class="pillar-icon">01</div>
+                  <div class="pillar-content">
+                    <h4>Sanad &amp; Epistemic Continuity</h4>
+                    <p>Rooting modern interpretation in unbroken genealogical chains of classical transmission.</p>
+                  </div>
+                </div>
+                <div class="pillar-item">
+                  <div class="pillar-icon">02</div>
+                  <div class="pillar-content">
+                    <h4>Rigorous Peer Review</h4>
+                    <p>All accepted papers published in Scopus/UGC indexed special volume with SABCeR.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Architectural Card with element.png motif -->
+            <div class="about-card-architectural">
+              <img src="element.png" alt="" class="card-corner-motif" aria-hidden="true">
+              
+              <div class="about-card-title">
+                <h4>Core Thematic Tracks</h4>
+                <span class="theme-tag">Academic Tracks</span>
+              </div>
+
+              <div class="focus-areas-list">
+                <!-- Focus Area 1 -->
+                <div class="focus-area-item">
+                  <div class="focus-pip"></div>
+                  <div class="focus-text">
+                    <h5>Usul al-Tafsir &amp; Classical Methodologies</h5>
+                    <p>Epistemological frameworks in foundational commentaries: al-Tabari, al-Zamakhshari, al-Razi, al-Qurtubi, and Ibn Kathir.</p>
+                  </div>
+                </div>
+
+                <!-- Focus Area 2 -->
+                <div class="focus-area-item">
+                  <div class="focus-pip"></div>
+                  <div class="focus-text">
+                    <h5>Thematic Hermeneutics (Tafsir Mawdu'i)</h5>
+                    <p>Synthesizing holistic Quranic worldviews on justice, governance, human rights, and environmental equilibrium.</p>
+                  </div>
+                </div>
+
+                <!-- Focus Area 3 -->
+                <div class="focus-area-item">
+                  <div class="focus-pip"></div>
+                  <div class="focus-text">
+                    <h5>Quranic Bioethics &amp; Modern Challenges</h5>
+                    <p>Exegetical principles applied to genomic technologies, artificial intelligence ethics, and contemporary bio-jurisprudence.</p>
+                  </div>
+                </div>
+
+                <!-- Focus Area 4 -->
+                <div class="focus-area-item">
+                  <div class="focus-pip"></div>
+                  <div class="focus-text">
+                    <h5>Digital Tools &amp; Computational Quranic Linguistics</h5>
+                    <p>Natural Language Processing (NLP), semantic graphs, and corpus analysis of classical exegesis.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- KEYNOTE SPEAKERS HIGHLIGHT -->
+      <section class="section section-muted">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Distinguished Faculty</span>
+            <h2>Keynote Plenary &amp; International Scholars</h2>
+            <p>Eminent authorities in Quranic sciences, Arabic linguistics, and Islamic thought convening in Kerala.</p>
+          </div>
+
+          <!-- Dynamic 4-Column Grid -->
+          <div class="speakers-grid" id="speakers-container">
+            <!-- Populated dynamically by app.js -->
+          </div>
+
+          <!-- Partnership Acknowledgement Banner -->
+          <div class="partnership-banner">
+            <div class="partner-box">
+              <div class="partner-logo-box">
+                <img src="MA'DIN ACADEMY LOGO.png" alt="Ma'din Academy">
+              </div>
+              <div class="partner-text">
+                <h4>Ma'din Academy</h4>
+                <p>A multi-disciplinary educational and cultural conglomerate established in 1997, overseeing over 50 academic institutes educating 25,000+ students from primary schooling to advanced doctoral research.</p>
+              </div>
+            </div>
+
+            <div class="partner-box">
+              <div class="partner-logo-box">
+                <img src="SABCeR-06.png" alt="SABCeR" class="logo-sabcer-card">
+              </div>
+              <div class="partner-text">
+                <h4>SABCeR</h4>
+                <p>Sayyid Ahmedul Bukhari Center for Research is a premier academic institution dedicated to higher Islamic scholarship, manuscript preservation, translational theology, and inter-civilizational discourse.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </section>
+
+    <!-- ==========================================
+         PAGE 2: SCHEDULE (Interactive Timeline)
+         ========================================== -->
+    <section id="view-schedule" class="page-view">
+      <div class="section">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Chronological Order</span>
+            <h2>Symposium Schedule &amp; Scientific Sessions</h2>
+            <p>Interactive program schedule for Wednesday, October 21, 2026. Explore sessions by track, download calendar invites, and view session details.</p>
+          </div>
+
+          <!-- Day & Track Switcher -->
+          <div class="schedule-controls">
+            <div class="track-chips-wrap">
+              <button class="track-chip active" data-track="All Tracks" onclick="filterSchedule('All Tracks')">
+                All Tracks
+              </button>
+              <button class="track-chip" data-track="Classical Usul" onclick="filterSchedule('Classical Usul')">
+                Classical Usul
+              </button>
+              <button class="track-chip" data-track="Contemporary Hermeneutics" onclick="filterSchedule('Contemporary Hermeneutics')">
+                Contemporary Hermeneutics
+              </button>
+              <button class="track-chip" data-track="Valedictory" onclick="filterSchedule('Valedictory')">
+                Valedictory
+              </button>
+            </div>
+
+            <div class="schedule-download-actions">
+              <button class="btn-schedule-action" onclick="showToast('Schedule PDF', 'Full symposium schedule brochure download started.')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download Program PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- Vertical Timeline Container -->
+          <div class="timeline-wrapper">
+            <div class="timeline-line"></div>
+            <div id="timeline-items-container">
+              <!-- Populated dynamically by app.js -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         PAGE 3: ALBUM (Interactive Media Gallery)
+         ========================================== -->
+    <section id="view-album" class="page-view">
+      <div class="section">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Visual Archives</span>
+            <h2>Symposium Media Gallery &amp; Exhibits</h2>
+            <p>Photographic documentation of scholarly sessions, research deliberations, keynote lectures, and rare manuscript exhibitions.</p>
+          </div>
+
+          <!-- Gallery Filter Header -->
+          <div class="album-header-bar">
+            <div class="album-filter-pills">
+              <button class="album-pill active" data-category="All" onclick="filterGallery('All')">All</button>
+              <button class="album-pill" data-category="Inauguration" onclick="filterGallery('Inauguration')">Inauguration</button>
+              <button class="album-pill" data-category="Paper Presentations" onclick="filterGallery('Paper Presentations')">Paper Presentations</button>
+              <button class="album-pill" data-category="Scholarly Panels" onclick="filterGallery('Scholarly Panels')">Scholarly Panels</button>
+              <button class="album-pill" data-category="Posters & Exhibits" onclick="filterGallery('Posters & Exhibits')">Posters &amp; Exhibits</button>
+            </div>
+
+            <div class="album-stats-badge" id="album-count-badge">
+              Showing 4 Photos
+            </div>
+          </div>
+
+          <!-- Album Grid -->
+          <div class="album-grid" id="album-grid-container">
+            <!-- Populated dynamically by app.js -->
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==========================================
+       SITE FOOTER
+       ========================================== -->
+  <footer class="site-footer">
+    <img src="element.png" alt="" class="footer-motif" aria-hidden="true">
+
+    <div class="container">
+      <div class="footer-grid">
+        <!-- Col 1: About & Logos -->
+        <div class="footer-brand">
+          <h4>Tafsir Symposium 2026</h4>
+          <p>
+            An international academic symposium dedicated to Quranic exegesis, hermeneutical paradigms, and contemporary thought, organized by the Department of Quranic Exegesis in collaboration with SABCeR and Ma'din Academy.
+          </p>
+          <div class="footer-partner-logos">
+            <img src="MA'DIN ACADEMY LOGO.png" alt="Ma'din Academy" class="footer-logo-img">
+            <div style="width: 1px; height: 28px; background: rgba(255,255,255,0.2);"></div>
+            <img src="SABCeR-06.png" alt="SABCeR" class="footer-logo-img">
+          </div>
+        </div>
+
+        <!-- Col 2: Navigation -->
+        <div class="footer-col">
+          <h5>Symposium Links</h5>
+          <ul class="footer-links">
+            <li><a href="#home" onclick="navigateTo('home'); return false;">Home / About</a></li>
+            <li><a href="#schedule" onclick="navigateTo('schedule'); return false;">Program Schedule</a></li>
+            <li><a href="#album" onclick="navigateTo('album'); return false;">Media Gallery</a></li>
+            <li><a href="javascript:void(0)" onclick="openRegistrationModal()">Symposium Registration</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Academic Focus -->
+        <div class="footer-col">
+          <h5>Research Tracks</h5>
+          <ul class="footer-links">
+            <li><a href="javascript:void(0)" onclick="navigateTo('schedule'); filterSchedule('Classical Usul');">Classical Usul al-Tafsir</a></li>
+            <li><a href="javascript:void(0)" onclick="navigateTo('schedule'); filterSchedule('Contemporary Hermeneutics');">Thematic Hermeneutics</a></li>
+            <li><a href="javascript:void(0)" onclick="navigateTo('schedule'); filterSchedule('Contemporary Hermeneutics');">Computational Arabic NLP</a></li>
+            <li><a href="javascript:void(0)" onclick="navigateTo('schedule'); filterSchedule('Valedictory');">Valedictory &amp; Awards</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Contact & Venue -->
+        <div class="footer-col">
+          <h5>Secretariat &amp; Venue</h5>
+          <div class="footer-contact-info">
+            <div class="footer-contact-item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              <span>Main Auditorium Complex, Ma'din Academy, Swalat Nagar, Malappuram, Kerala, 676519</span>
+            </div>
+            <div class="footer-contact-item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              <span>symposium@madin.edu.in / research@sabcer.org</span>
+            </div>
+            <div class="footer-contact-item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              <span>+91 483 273 8343 / +91 94471 23456</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          &copy; 2026 Department of Quranic Exegesis, Ma'din Academy in collaboration with SABCeR. All rights reserved.
+        </div>
+        <div style="display: flex; gap: 1.5rem;">
+          <a href="javascript:void(0)" onclick="showToast('Privacy Policy', 'Data is securely processed under institutional academic guidelines.')">Privacy Protocol</a>
+          <a href="javascript:void(0)" onclick="showToast('Ethics Statement', 'Symposium adheres to COPE international publishing ethics.')">Ethical Guidelines</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==========================================
+       MODAL 1: REGISTRATION MODAL
+       ========================================== -->
+  <div class="modal-backdrop" id="registration-modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="reg-modal-title">Symposium Registration</h3>
+        <button class="modal-close-btn" onclick="closeModal('registration-modal')" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form id="symposium-reg-form" onsubmit="handleRegistrationSubmit(event)">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Full Name &amp; Title</label>
+              <input type="text" name="fullName" class="form-control" placeholder="e.g. Dr. Muhammad Al-Ghazali" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Official Email</label>
+              <input type="email" name="email" class="form-control" placeholder="e.g. scholar@university.edu" required>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Academic Institution / Affiliation</label>
+              <input type="text" name="institution" class="form-control" placeholder="e.g. Al-Azhar / IIUM / Oxford" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">WhatsApp / Contact Phone</label>
+              <input type="tel" name="phone" class="form-control" placeholder="+91 98765 43210" required>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Registration Category</label>
+              <select name="regType" class="form-control" required>
+                <option value="Academic Delegate">Academic Delegate</option>
+                <option value="Research Scholar">Postgraduate / Research Scholar</option>
+                <option value="Student">Student Participant</option>
+                <option value="Observer">Online International Observer</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Primary Track of Interest</label>
+              <select name="track" class="form-control" required>
+                <option value="Classical Usul">Usul al-Tafsir &amp; Classical Methodologies</option>
+                <option value="Contemporary Hermeneutics">Thematic Hermeneutics (Tafsir Mawdu'i)</option>
+                <option value="Computational NLP">Digital Tools &amp; Computational Linguistics</option>
+                <option value="Bioethics">Quranic Bioethics &amp; Societal Challenges</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-footer" style="padding: 1.25rem 0 0; margin-top: 1.5rem; background: transparent;">
+            <button type="button" class="btn-pill-subtle" onclick="closeModal('registration-modal')">Cancel</button>
+            <button type="submit" class="btn-emerald">
+              Complete Registration
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 2: LIGHTBOX MODAL
+       ========================================== -->
+  <div class="modal-backdrop lightbox-modal" id="lightbox-modal">
+    <div class="modal-dialog">
+      <div class="lightbox-content-box">
+        <div class="lightbox-img-frame">
+          <img id="lightbox-img" src="" alt="Symposium Gallery Detail">
+          <button class="lightbox-nav-btn lightbox-prev" onclick="navigateLightbox(-1)" aria-label="Previous Image">
+            &#10094;
+          </button>
+          <button class="lightbox-nav-btn lightbox-next" onclick="navigateLightbox(1)" aria-label="Next Image">
+            &#10095;
+          </button>
+        </div>
+        <div class="lightbox-caption-panel">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span class="track-tag-badge" id="lightbox-category">Category</span>
+            <span style="font-size: 0.8rem; color: var(--neutral-mid);" id="lightbox-counter">1 / 4</span>
+          </div>
+          <h3 id="lightbox-title" style="font-size: 1.25rem; font-weight: 800; color: var(--neutral-dark); margin-bottom: 0.4rem;"></h3>
+          <p id="lightbox-desc" style="font-size: 0.9rem; color: var(--neutral-dark-muted); line-height: 1.5;"></p>
+          <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+            <button class="btn-pill-subtle" onclick="closeModal('lightbox-modal')">Close Lightbox</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 3: SESSION ABSTRACT MODAL
+       ========================================== -->
+  <div class="modal-backdrop" id="abstract-modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="abstract-modal-title" style="font-size: 1.2rem;">Session Overview</h3>
+        <button class="modal-close-btn" onclick="closeModal('abstract-modal')">&times;</button>
+      </div>
+      <div class="modal-body" id="abstract-modal-body">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 4: SPEAKER BIO MODAL
+       ========================================== -->
+  <div class="modal-backdrop" id="speaker-modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Keynote Faculty Dossier</h3>
+        <button class="modal-close-btn" onclick="closeModal('speaker-modal')">&times;</button>
+      </div>
+      <div class="modal-body" id="speaker-modal-body">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Application Scripts -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
