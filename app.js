@@ -27,7 +27,8 @@ const AppState = {
 };
 
 function initStorage() {
-  if (!localStorage.getItem(STORAGE_KEYS.SCHEDULE)) {
+  const currentScheduleRaw = localStorage.getItem(STORAGE_KEYS.SCHEDULE);
+  if (!currentScheduleRaw || currentScheduleRaw.includes("Registration & Opening Reception")) {
     localStorage.setItem(STORAGE_KEYS.SCHEDULE, JSON.stringify(INITIAL_SCHEDULE));
   }
   if (!localStorage.getItem(STORAGE_KEYS.GALLERY)) {
