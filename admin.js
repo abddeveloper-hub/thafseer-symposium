@@ -5,6 +5,7 @@
 
 const STORAGE_KEYS = {
   SCHEDULE: 'tafsir_schedule_2026',
+  SESSIONS: 'tafsir_sessions_2026',
   GALLERY: 'tafsir_gallery_2026',
   REGISTRATIONS: 'tafsir_registrations_2026',
   SPEAKERS: 'tafsir_speakers_2026'
@@ -13,6 +14,7 @@ const STORAGE_KEYS = {
 const AdminState = {
   activeTab: 'schedule',
   schedule: [],
+  sessions: [],
   gallery: [],
   registrations: [],
   speakers: []
@@ -20,34 +22,90 @@ const AdminState = {
 
 function initAdminStorage() {
   const currentScheduleRaw = localStorage.getItem(STORAGE_KEYS.SCHEDULE);
-  if (!currentScheduleRaw || currentScheduleRaw.includes("Registration & Opening Reception")) {
+  if (!currentScheduleRaw || currentScheduleRaw === '[]' || currentScheduleRaw.includes("session-1") || currentScheduleRaw.includes("Registration & Opening Reception")) {
     localStorage.setItem(STORAGE_KEYS.SCHEDULE, JSON.stringify(INITIAL_SCHEDULE));
   }
-  if (!localStorage.getItem(STORAGE_KEYS.GALLERY)) {
+  const currentSessionsRaw = localStorage.getItem(STORAGE_KEYS.SESSIONS);
+  if (!currentSessionsRaw || currentSessionsRaw === '[]') {
+    localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(typeof INITIAL_SESSIONS !== 'undefined' ? INITIAL_SESSIONS : []));
+  }
+  const currentGalleryRaw = localStorage.getItem(STORAGE_KEYS.GALLERY);
+  if (!currentGalleryRaw || currentGalleryRaw.includes("gal-1")) {
     localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(INITIAL_GALLERY));
   }
-  if (!localStorage.getItem(STORAGE_KEYS.REGISTRATIONS)) {
+  const currentRegRaw = localStorage.getItem(STORAGE_KEYS.REGISTRATIONS);
+  if (!currentRegRaw || currentRegRaw.includes("reg-101")) {
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(INITIAL_REGISTRATIONS));
   }
-  if (!localStorage.getItem(STORAGE_KEYS.SPEAKERS)) {
+  const currentSpeakersRaw = localStorage.getItem(STORAGE_KEYS.SPEAKERS);
+  if (!currentSpeakersRaw || currentSpeakersRaw.includes("spk-1")) {
     localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(INITIAL_SPEAKERS));
   }
 
-  AdminState.schedule = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCHEDULE));
-  AdminState.gallery = JSON.parse(localStorage.getItem(STORAGE_KEYS.GALLERY));
-  AdminState.registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS));
-  AdminState.speakers = JSON.parse(localStorage.getItem(STORAGE_KEYS.SPEAKERS));
+  AdminState.schedule = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCHEDULE)) || [];
+  AdminState.sessions = JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSIONS)) || [];
+  AdminState.gallery = JSON.parse(localStorage.getItem(STORAGE_KEYS.GALLERY)) || [];
+  AdminState.registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS)) || [];
+  AdminState.speakers = JSON.parse(localStorage.getItem(STORAGE_KEYS.SPEAKERS)) || [];
+
+  if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isConnected) {
+    Promise.all([
+      FirebaseSync.seedInitialData('schedule', AdminState.schedule),
+      FirebaseSync.seedInitialData('sessions', AdminState.sessions),
+      FirebaseSync.seedInitialData('gallery', AdminState.gallery),
+      FirebaseSync.seedInitialData('registrations', AdminState.registrations),
+      FirebaseSync.seedInitialData('speakers', AdminState.speakers)
+    ]).then(() => {
+      FirebaseSync.syncNode('schedule', (data) => {
+        AdminState.schedule = data || [];
+        localStorage.setItem(STORAGE_KEYS.SCHEDULE, JSON.stringify(AdminState.schedule));
+        renderAdminScheduleTable();
+        renderAdminMetrics();
+      });
+      FirebaseSync.syncNode('sessions', (data) => {
+        AdminState.sessions = data || [];
+        localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(AdminState.sessions));
+        renderAdminSessionsTable();
+      });
+      FirebaseSync.syncNode('gallery', (data) => {
+        AdminState.gallery = data || [];
+        localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AdminState.gallery));
+        renderAdminMetrics();
+      });
+      FirebaseSync.syncNode('registrations', (data) => {
+        AdminState.registrations = data || [];
+        localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(AdminState.registrations));
+        renderAdminRegistrationsTable();
+        renderAdminMetrics();
+      });
+      FirebaseSync.syncNode('speakers', (data) => {
+        AdminState.speakers = data || [];
+        localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AdminState.speakers));
+        renderAdminSpeakersTable();
+        renderAdminMetrics();
+      });
+    }).catch(err => {
+      console.warn("Firebase admin sync setup error:", err);
+    });
+  }
 }
 
 function saveAdminState(key) {
   if (key === 'schedule') {
     localStorage.setItem(STORAGE_KEYS.SCHEDULE, JSON.stringify(AdminState.schedule));
+    if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('schedule', AdminState.schedule);
+  } else if (key === 'sessions') {
+    localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(AdminState.sessions));
+    if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('sessions', AdminState.sessions);
   } else if (key === 'gallery') {
     localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AdminState.gallery));
+    if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('gallery', AdminState.gallery);
   } else if (key === 'registrations') {
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(AdminState.registrations));
+    if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('registrations', AdminState.registrations);
   } else if (key === 'speakers') {
     localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AdminState.speakers));
+    if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('speakers', AdminState.speakers);
   }
 }
 
@@ -100,11 +158,24 @@ function renderAdminScheduleTable() {
   const tbody = document.getElementById('admin-schedule-tbody');
   if (!tbody) return;
 
-  tbody.innerHTML = AdminState.schedule.map(session => `
+  tbody.innerHTML = AdminState.schedule.map(session => {
+    const filledSeats = AdminState.registrations.filter(r => r.sessionId === session.id).length;
+    const limit = parseInt(session.participantLimit) || 50;
+    const isFull = filledSeats >= limit;
+
+    return `
     <tr>
       <td style="font-weight: 700; color: var(--surface-deep-petrol);">${session.timeStart} – ${session.timeEnd}</td>
       <td style="max-width: 240px; font-weight: 700;">${session.title}</td>
-      <td><span class="track-tag-badge">${session.track}</span></td>
+      <td>
+        <span class="track-tag-badge">${session.track}</span>
+        <div style="font-size: 0.78rem; color: var(--neutral-mid); margin-top: 2px;">${session.venue}</div>
+      </td>
+      <td>
+        <span class="status-chip ${isFull ? 'declined' : 'accepted'}">
+          ${filledSeats} / ${limit} Seats
+        </span>
+      </td>
       <td>${session.speaker}</td>
       <td>
         <span class="status-chip ${session.status === 'unpublished' ? 'declined' : 'accepted'}">
@@ -114,7 +185,6 @@ function renderAdminScheduleTable() {
       <td>
         <div class="action-btn-group">
           <button class="btn-table-action edit" onclick="openEditSessionModal('${session.id}')" title="Edit Session Details">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
             Edit
           </button>
           <button class="btn-table-action" onclick="togglePublishSession('${session.id}')">
@@ -126,7 +196,8 @@ function renderAdminScheduleTable() {
         </div>
       </td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function handleAddSessionForm(e) {
@@ -141,6 +212,7 @@ function handleAddSessionForm(e) {
     chair: form.chair.value.trim() || "Symposium Academic Board",
     track: form.track.value,
     venue: form.venue.value.trim() || "Auditorium Complex",
+    participantLimit: parseInt(form.participantLimit.value) || 50,
     description: form.description.value.trim(),
     abstract: form.abstract.value.trim() || form.description.value.trim(),
     status: 'published'
@@ -151,7 +223,7 @@ function handleAddSessionForm(e) {
   renderAdminScheduleTable();
   renderAdminMetrics();
   form.reset();
-  showToast('Session Added', `"${newSession.title}" added and live on the public schedule.`);
+  showToast('Session Added', `"${newSession.title}" added with seat capacity ${newSession.participantLimit}.`);
 }
 
 function togglePublishSession(sessionId) {
@@ -184,6 +256,9 @@ function openEditSessionModal(sessionId) {
   document.getElementById('edit-session-track').value = session.track;
   document.getElementById('edit-session-title').value = session.title;
   document.getElementById('edit-session-venue').value = session.venue;
+  if (document.getElementById('edit-session-participantLimit')) {
+    document.getElementById('edit-session-participantLimit').value = session.participantLimit || 50;
+  }
   document.getElementById('edit-session-speaker').value = session.speaker;
   document.getElementById('edit-session-chair').value = session.chair || '';
   document.getElementById('edit-session-description').value = session.description;
@@ -205,6 +280,9 @@ function handleUpdateSession(e) {
   session.track = form.track.value;
   session.title = form.title.value.trim();
   session.venue = form.venue.value.trim();
+  if (form.participantLimit) {
+    session.participantLimit = parseInt(form.participantLimit.value) || 50;
+  }
   session.speaker = form.speaker.value.trim();
   session.chair = form.chair.value.trim();
   session.description = form.description.value.trim();
@@ -215,6 +293,118 @@ function handleUpdateSession(e) {
   renderAdminMetrics();
   closeModal('session-edit-modal');
   showToast('Session Updated', `"${session.title}" updated successfully.`);
+}
+
+// ==========================================
+// TAB B: SESSION MANAGER (REGISTRATION SESSIONS)
+// ==========================================
+
+function renderAdminSessionsTable() {
+  const tbody = document.getElementById('admin-sessions-tbody');
+  if (!tbody) return;
+
+  if (AdminState.sessions.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 2rem; color: var(--neutral-mid);">
+          No registration sessions created yet. Use the form above to create a session.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = AdminState.sessions.map(session => {
+    const filledSeats = AdminState.registrations.filter(r => r.sessionId === session.id).length;
+    const limit = parseInt(session.participantLimit) || 100;
+    const isFull = filledSeats >= limit;
+
+    return `
+      <tr>
+        <td style="font-weight: 700; color: var(--neutral-dark);">${session.title}</td>
+        <td style="font-weight: 600; color: var(--surface-deep-petrol);">${session.timeSlot || 'Full Day'}</td>
+        <td>${session.venue}</td>
+        <td>
+          <span class="status-chip ${isFull ? 'declined' : 'accepted'}">
+            ${filledSeats} / ${limit} Seats
+          </span>
+        </td>
+        <td>
+          <span class="status-chip ${session.status === 'unpublished' ? 'declined' : 'accepted'}">
+            ${session.status === 'unpublished' ? 'Hidden' : 'Published'}
+          </span>
+        </td>
+        <td>
+          <div class="action-btn-group">
+            <button class="btn-table-action edit" onclick="openEditRegSessionModal('${session.id}')">Edit</button>
+            <button class="btn-table-action decline" onclick="deleteRegSession('${session.id}')">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function handleAddRegSessionForm(e) {
+  e.preventDefault();
+  const form = e.target;
+  const newSession = {
+    id: `sess-${Date.now()}`,
+    title: form.title.value.trim(),
+    timeSlot: form.timeSlot.value.trim(),
+    venue: form.venue.value.trim(),
+    participantLimit: parseInt(form.participantLimit.value) || 100,
+    description: form.description ? form.description.value.trim() : '',
+    status: 'published'
+  };
+
+  AdminState.sessions.push(newSession);
+  saveAdminState('sessions');
+  renderAdminSessionsTable();
+  form.reset();
+  showToast('Registration Session Created', `"${newSession.title}" added with seat capacity ${newSession.participantLimit}.`);
+}
+
+function openEditRegSessionModal(sessionId) {
+  const session = AdminState.sessions.find(s => s.id === sessionId);
+  if (!session) return;
+
+  document.getElementById('edit-reg-session-id').value = session.id;
+  document.getElementById('edit-reg-session-title').value = session.title;
+  document.getElementById('edit-reg-session-timeSlot').value = session.timeSlot || '';
+  document.getElementById('edit-reg-session-participantLimit').value = session.participantLimit || 100;
+  document.getElementById('edit-reg-session-venue').value = session.venue || '';
+  document.getElementById('edit-reg-session-description').value = session.description || '';
+
+  const modal = document.getElementById('reg-session-edit-modal');
+  if (modal) modal.classList.add('open');
+}
+
+function handleUpdateRegSession(e) {
+  e.preventDefault();
+  const form = e.target;
+  const id = form.id.value;
+  const session = AdminState.sessions.find(s => s.id === id);
+  if (!session) return;
+
+  session.title = form.title.value.trim();
+  session.timeSlot = form.timeSlot.value.trim();
+  session.participantLimit = parseInt(form.participantLimit.value) || 100;
+  session.venue = form.venue.value.trim();
+  session.description = form.description.value.trim();
+
+  saveAdminState('sessions');
+  renderAdminSessionsTable();
+  closeModal('reg-session-edit-modal');
+  showToast('Session Updated', `"${session.title}" updated successfully.`);
+}
+
+function deleteRegSession(sessionId) {
+  if (!confirm('Are you sure you want to delete this registration session?')) return;
+  AdminState.sessions = AdminState.sessions.filter(s => s.id !== sessionId);
+  saveAdminState('sessions');
+  renderAdminSessionsTable();
+  showToast('Session Removed', 'Registration session removed.');
 }
 
 // ==========================================
@@ -569,10 +759,11 @@ function renderAdminRegistrationsTable() {
   const filtered = AdminState.registrations.filter(r => {
     if (!query) return true;
     return (
-      r.fullName.toLowerCase().includes(query) ||
-      r.institution.toLowerCase().includes(query) ||
-      r.paperTitle.toLowerCase().includes(query) ||
-      r.track.toLowerCase().includes(query)
+      (r.fullName && r.fullName.toLowerCase().includes(query)) ||
+      (r.shuhba && r.shuhba.toLowerCase().includes(query)) ||
+      (r.shuhbaNumber && r.shuhbaNumber.toLowerCase().includes(query)) ||
+      (r.sessionTitle && r.sessionTitle.toLowerCase().includes(query)) ||
+      (r.phone && r.phone.toLowerCase().includes(query))
     );
   });
 
@@ -588,26 +779,29 @@ function renderAdminRegistrationsTable() {
   }
 
   tbody.innerHTML = filtered.map(r => {
-    const statusClass = r.status === 'Accepted' ? 'accepted' : r.status === 'Declined' ? 'declined' : 'under-review';
+    const statusClass = r.status === 'Accepted' || r.status === 'Confirmed' ? 'accepted' : r.status === 'Declined' ? 'declined' : 'under-review';
+    const sessionName = r.sessionTitle || 'General Session';
     return `
       <tr>
         <td>
           <div style="font-weight: 700; color: var(--neutral-dark);">${r.fullName}</div>
-          <div style="font-size: 0.78rem; color: var(--neutral-mid);">${r.email}</div>
+          <div style="font-size: 0.78rem; color: var(--neutral-mid);">${r.phone || 'No Phone'}</div>
         </td>
-        <td style="max-width: 180px;">${r.institution}</td>
         <td>
-          <div style="font-weight: 600; color: var(--surface-deep-petrol);">${r.regType}</div>
-          <div style="font-size: 0.75rem; color: var(--primary-emerald);">${r.track}</div>
+          <div style="font-weight: 700; color: var(--surface-deep-petrol);">${r.shuhba || 'N/A'}</div>
+          <div style="font-size: 0.75rem; color: var(--primary-emerald);">No: ${r.shuhbaNumber || 'N/A'}</div>
         </td>
-        <td style="max-width: 220px; font-size: 0.82rem;">
-          ${r.paperTitle}
+        <td style="max-width: 180px; font-weight: 600; font-size: 0.85rem;">
+          ${sessionName}
+        </td>
+        <td style="max-width: 200px; font-size: 0.82rem; color: var(--neutral-dark-muted);">
+          ${r.reasonToJoin || r.abstract || 'N/A'}
         </td>
         <td><span class="status-chip ${statusClass}">${r.status}</span></td>
         <td style="font-size: 0.8rem; color: var(--neutral-mid);">${r.date}</td>
         <td>
           <div class="action-btn-group">
-            <button class="btn-table-action accept" onclick="updateRegistrationStatus('${r.id}', 'Accepted')" title="Accept">✓</button>
+            <button class="btn-table-action accept" onclick="updateRegistrationStatus('${r.id}', 'Confirmed')" title="Confirm">✓</button>
             <button class="btn-table-action decline" onclick="updateRegistrationStatus('${r.id}', 'Declined')" title="Decline">✕</button>
             <button class="btn-table-action" onclick="viewRegistrationModal('${r.id}')" title="Details">Info</button>
           </div>
@@ -639,23 +833,20 @@ function viewRegistrationModal(regId) {
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem;">
       <div>
         <h4 style="font-size: 1.25rem; font-weight: 800; color: var(--neutral-dark);">${reg.fullName}</h4>
-        <p style="color: var(--primary-emerald); font-weight: 600; font-size: 0.9rem;">${reg.regType} • ${reg.institution}</p>
-        <p style="color: var(--neutral-mid); font-size: 0.85rem;">Email: ${reg.email} | Phone: ${reg.phone || 'N/A'}</p>
+        <p style="color: var(--primary-emerald); font-weight: 600; font-size: 0.9rem;">SHUHBA: ${reg.shuhba || 'N/A'} (No: ${reg.shuhbaNumber || 'N/A'})</p>
+        <p style="color: var(--neutral-mid); font-size: 0.85rem;">WhatsApp / Phone: ${reg.phone || 'N/A'}</p>
       </div>
-      <span class="status-chip ${reg.status === 'Accepted' ? 'accepted' : reg.status === 'Declined' ? 'declined' : 'under-review'}">${reg.status}</span>
+      <span class="status-chip ${reg.status === 'Confirmed' || reg.status === 'Accepted' ? 'accepted' : reg.status === 'Declined' ? 'declined' : 'under-review'}">${reg.status}</span>
     </div>
 
     <div style="background: var(--surface-muted); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--subtle-divider); margin-bottom: 1.25rem;">
-      <h5 style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--surface-deep-petrol); margin-bottom: 0.35rem;">Track of Interest</h5>
-      <p style="font-size: 1.05rem; font-weight: 700; color: var(--neutral-dark);">${reg.track}</p>
-      <div style="margin-top: 0.5rem;">
-        <span class="track-tag-badge">Category: ${reg.regType}</span>
-      </div>
+      <h5 style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--surface-deep-petrol); margin-bottom: 0.35rem;">Selected Session</h5>
+      <p style="font-size: 1.05rem; font-weight: 700; color: var(--neutral-dark);">${reg.sessionTitle || 'General Session'}</p>
     </div>
 
-    <h5 style="font-size: 0.88rem; font-weight: 700; color: var(--neutral-dark); margin-bottom: 0.4rem;">Notes / Remarks</h5>
+    <h5 style="font-size: 0.88rem; font-weight: 700; color: var(--neutral-dark); margin-bottom: 0.4rem;">Why Did You Join?</h5>
     <p style="font-size: 0.92rem; color: var(--neutral-dark-muted); line-height: 1.6; margin-bottom: 1.5rem;">
-      ${reg.abstract || 'General symposium registration.'}
+      ${reg.reasonToJoin || reg.abstract || 'No reason specified.'}
     </p>
 
     <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
@@ -672,16 +863,15 @@ function viewRegistrationModal(regId) {
 }
 
 function exportRegistrationsCSV() {
-  const headers = ['ID', 'Full Name', 'Email', 'Institution', 'Phone', 'Type', 'Track', 'Paper Title', 'Status', 'Date'];
+  const headers = ['ID', 'Full Name', 'Phone', 'SHUHBA', 'SHUHBA Number', 'Selected Session', 'Why Joined', 'Status', 'Date'];
   const rows = AdminState.registrations.map(r => [
     `"${r.id}"`,
-    `"${r.fullName.replace(/"/g, '""')}"`,
-    `"${r.email}"`,
-    `"${r.institution.replace(/"/g, '""')}"`,
+    `"${(r.fullName || '').replace(/"/g, '""')}"`,
     `"${r.phone || ''}"`,
-    `"${r.regType}"`,
-    `"${r.track}"`,
-    `"${r.paperTitle.replace(/"/g, '""')}"`,
+    `"${(r.shuhba || '').replace(/"/g, '""')}"`,
+    `"${(r.shuhbaNumber || '').replace(/"/g, '""')}"`,
+    `"${(r.sessionTitle || '').replace(/"/g, '""')}"`,
+    `"${(r.reasonToJoin || r.abstract || '').replace(/"/g, '""')}"`,
     `"${r.status}"`,
     `"${r.date}"`
   ]);
@@ -700,24 +890,35 @@ function exportRegistrationsCSV() {
 
 function openAddSubmissionModal() {
   const modal = document.getElementById('admin-new-sub-modal');
+  const selectEl = document.getElementById('admin-reg-session-select');
+  if (selectEl) {
+    const activeSessions = AdminState.sessions.filter(s => s.status !== 'unpublished');
+    if (activeSessions.length === 0) {
+      selectEl.innerHTML = '<option value="">No registration sessions available</option>';
+    } else {
+      selectEl.innerHTML = activeSessions.map(session => `<option value="${session.id}">${session.title} (${session.timeSlot || 'Scheduled'})</option>`).join('');
+    }
+  }
   if (modal) modal.classList.add('open');
 }
 
 function handleAdminNewSubmission(e) {
   e.preventDefault();
   const form = e.target;
+  const sessionId = form.sessionId.value;
+  const selectedSession = AdminState.sessions.find(s => s.id === sessionId);
+
   const newReg = {
     id: `reg-${Date.now()}`,
     fullName: form.fullName.value.trim(),
-    email: form.email.value.trim(),
-    institution: form.institution.value.trim(),
     phone: form.phone.value.trim(),
-    regType: form.regType.value,
-    track: form.track.value,
-    paperTitle: 'Delegate Participation',
+    shuhba: form.shuhba.value.trim(),
+    shuhbaNumber: form.shuhbaNumber.value.trim(),
+    reasonToJoin: form.reasonToJoin.value.trim(),
+    sessionId: sessionId,
+    sessionTitle: selectedSession ? selectedSession.title : 'General Session',
     status: form.status.value,
-    date: new Date().toISOString().slice(0, 10),
-    abstract: form.abstract.value.trim() || 'Registered via Admin Directorate.'
+    date: new Date().toISOString().slice(0, 10)
   };
 
   AdminState.registrations.unshift(newReg);
@@ -791,6 +992,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initAdminStorage();
   renderAdminMetrics();
   renderAdminScheduleTable();
+  renderAdminSessionsTable();
   renderAdminSpeakersTable();
   renderAdminRegistrationsTable();
   setupDropzone();

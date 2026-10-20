@@ -9,6 +9,7 @@
 
 const STORAGE_KEYS = {
   SCHEDULE: 'tafsir_schedule_2026',
+  SESSIONS: 'tafsir_sessions_2026',
   GALLERY: 'tafsir_gallery_2026',
   REGISTRATIONS: 'tafsir_registrations_2026',
   SPEAKERS: 'tafsir_speakers_2026'
@@ -21,6 +22,7 @@ const AppState = {
   adminTab: 'schedule',
   currentLightboxIndex: 0,
   schedule: [],
+  sessions: [],
   gallery: [],
   registrations: [],
   speakers: []
@@ -28,34 +30,85 @@ const AppState = {
 
 function initStorage() {
   const currentScheduleRaw = localStorage.getItem(STORAGE_KEYS.SCHEDULE);
-  if (!currentScheduleRaw || currentScheduleRaw.includes("Registration & Opening Reception")) {
+  if (!currentScheduleRaw || currentScheduleRaw === '[]' || currentScheduleRaw.includes("session-1") || currentScheduleRaw.includes("Registration & Opening Reception")) {
     localStorage.setItem(STORAGE_KEYS.SCHEDULE, JSON.stringify(INITIAL_SCHEDULE));
   }
-  if (!localStorage.getItem(STORAGE_KEYS.GALLERY)) {
+  const currentSessionsRaw = localStorage.getItem(STORAGE_KEYS.SESSIONS);
+  if (!currentSessionsRaw || currentSessionsRaw === '[]') {
+    localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(typeof INITIAL_SESSIONS !== 'undefined' ? INITIAL_SESSIONS : []));
+  }
+  const currentGalleryRaw = localStorage.getItem(STORAGE_KEYS.GALLERY);
+  if (!currentGalleryRaw || currentGalleryRaw.includes("gal-1")) {
     localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(INITIAL_GALLERY));
   }
-  if (!localStorage.getItem(STORAGE_KEYS.REGISTRATIONS)) {
+  const currentRegRaw = localStorage.getItem(STORAGE_KEYS.REGISTRATIONS);
+  if (!currentRegRaw || currentRegRaw.includes("reg-101")) {
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(INITIAL_REGISTRATIONS));
   }
-  if (!localStorage.getItem(STORAGE_KEYS.SPEAKERS)) {
+  const currentSpeakersRaw = localStorage.getItem(STORAGE_KEYS.SPEAKERS);
+  if (!currentSpeakersRaw || currentSpeakersRaw.includes("spk-1")) {
     localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(INITIAL_SPEAKERS));
   }
 
-  AppState.schedule = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCHEDULE));
-  AppState.gallery = JSON.parse(localStorage.getItem(STORAGE_KEYS.GALLERY));
-  AppState.registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS));
-  AppState.speakers = JSON.parse(localStorage.getItem(STORAGE_KEYS.SPEAKERS));
+  AppState.schedule = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCHEDULE)) || [];
+  AppState.sessions = JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSIONS)) || [];
+  AppState.gallery = JSON.parse(localStorage.getItem(STORAGE_KEYS.GALLERY)) || [];
+  AppState.registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS)) || [];
+  AppState.speakers = JSON.parse(localStorage.getItem(STORAGE_KEYS.SPEAKERS)) || [];
+
+  if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isConnected) {
+    Promise.all([
+      FirebaseSync.seedInitialData('schedule', AppState.schedule),
+      FirebaseSync.seedInitialData('sessions', AppState.sessions),
+      FirebaseSync.seedInitialData('gallery', AppState.gallery),
+      FirebaseSync.seedInitialData('registrations', AppState.registrations),
+      FirebaseSync.seedInitialData('speakers', AppState.speakers)
+    ]).then(() => {
+      FirebaseSync.syncNode('schedule', (data) => {
+        AppState.schedule = data || [];
+        localStorage.setItem(STORAGE_KEYS.SCHEDULE, JSON.stringify(AppState.schedule));
+        renderSchedule();
+      });
+      FirebaseSync.syncNode('sessions', (data) => {
+        AppState.sessions = data || [];
+        localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(AppState.sessions));
+      });
+      FirebaseSync.syncNode('gallery', (data) => {
+        AppState.gallery = data || [];
+        localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AppState.gallery));
+        renderGallery();
+      });
+      FirebaseSync.syncNode('registrations', (data) => {
+        AppState.registrations = data || [];
+        localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(AppState.registrations));
+      });
+      FirebaseSync.syncNode('speakers', (data) => {
+        AppState.speakers = data || [];
+        localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AppState.speakers));
+        renderSpeakers();
+      });
+    }).catch(err => {
+      console.warn("Firebase sync setup error:", err);
+    });
+  }
 }
 
 function saveState(key) {
   if (key === 'schedule') {
     localStorage.setItem(STORAGE_KEYS.SCHEDULE, JSON.stringify(AppState.schedule));
+    if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('schedule', AppState.schedule);
+  } else if (key === 'sessions') {
+    localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(AppState.sessions));
+    if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('sessions', AppState.sessions);
   } else if (key === 'gallery') {
     localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AppState.gallery));
+    if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('gallery', AppState.gallery);
   } else if (key === 'registrations') {
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(AppState.registrations));
+    if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('registrations', AppState.registrations);
   } else if (key === 'speakers') {
     localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AppState.speakers));
+    if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('speakers', AppState.speakers);
   }
 }
 
@@ -479,9 +532,32 @@ function navigateLightbox(step) {
 // 7. SYMPOSIUM REGISTRATION MODAL
 // ==========================================
 
+function populateSessionSelectOptions(selectEl) {
+  if (!selectEl) return;
+
+  const activeSessions = AppState.sessions.filter(s => s.status !== 'unpublished');
+
+  if (activeSessions.length === 0) {
+    selectEl.innerHTML = '<option value="">No registration sessions available</option>';
+    return;
+  }
+
+  selectEl.innerHTML = '<option value="" disabled selected>-- Select a Registration Session --</option>' + activeSessions.map(session => {
+    const filledSeats = AppState.registrations.filter(r => r.sessionId === session.id).length;
+    const limit = parseInt(session.participantLimit) || 100;
+    const isFull = filledSeats >= limit;
+    const label = `${session.title} (${session.timeSlot || 'Scheduled'}) - ${filledSeats}/${limit} Seats ${isFull ? '[FULL]' : ''}`;
+    return `<option value="${session.id}" ${isFull ? 'disabled' : ''}>${label}</option>`;
+  }).join('');
+}
+
 function openRegistrationModal() {
   const modal = document.getElementById('registration-modal');
   if (!modal) return;
+
+  const selectEl = document.getElementById('reg-session-select');
+  populateSessionSelectOptions(selectEl);
+
   modal.classList.add('open');
 }
 
@@ -490,24 +566,36 @@ function handleRegistrationSubmit(e) {
   const form = e.target;
 
   const fullName = form.fullName.value.trim();
-  const email = form.email.value.trim();
-  const institution = form.institution.value.trim();
   const phone = form.phone.value.trim();
-  const regType = form.regType.value;
-  const track = form.track.value;
+  const shuhba = form.shuhba.value.trim();
+  const shuhbaNumber = form.shuhbaNumber.value.trim();
+  const reasonToJoin = form.reasonToJoin.value.trim();
+  const sessionId = form.sessionId.value;
+
+  const selectedSession = AppState.sessions.find(s => s.id === sessionId);
+  if (!selectedSession) {
+    showToast('Selection Required', 'Please select a valid registration session.');
+    return;
+  }
+
+  const filledSeats = AppState.registrations.filter(r => r.sessionId === sessionId).length;
+  const limit = parseInt(selectedSession.participantLimit) || 100;
+  if (filledSeats >= limit) {
+    showToast('Session Full', 'This session has reached its maximum participant limit.');
+    return;
+  }
 
   const newReg = {
     id: `reg-${Date.now()}`,
     fullName,
-    email,
-    institution,
     phone,
-    regType,
-    track,
-    paperTitle: 'Delegate Participation',
+    shuhba,
+    shuhbaNumber,
+    reasonToJoin,
+    sessionId: selectedSession.id,
+    sessionTitle: selectedSession.title,
     status: 'Confirmed',
-    date: new Date().toISOString().slice(0, 10),
-    abstract: 'General Symposium Registration'
+    date: new Date().toISOString().slice(0, 10)
   };
 
   AppState.registrations.unshift(newReg);
@@ -516,7 +604,7 @@ function handleRegistrationSubmit(e) {
   closeModal('registration-modal');
   form.reset();
 
-  showToast('Registration Confirmed!', `Welcome, ${fullName}. Your symposium registration has been recorded.`);
+  showToast('Registration Confirmed!', `Welcome, ${fullName}. Registered for "${selectedSession.title}".`);
 }
 
 // ==========================================

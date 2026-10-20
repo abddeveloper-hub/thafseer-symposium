@@ -488,17 +488,6 @@
               <input type="text" name="fullName" class="form-control" placeholder="e.g. Dr. Muhammad Al-Ghazali" required>
             </div>
             <div class="form-group">
-              <label class="form-label">Official Email</label>
-              <input type="email" name="email" class="form-control" placeholder="e.g. scholar@university.edu" required>
-            </div>
-          </div>
-
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label class="form-label">Academic Institution / Affiliation</label>
-              <input type="text" name="institution" class="form-control" placeholder="e.g. Al-Azhar / IIUM / Oxford" required>
-            </div>
-            <div class="form-group">
               <label class="form-label">WhatsApp / Contact Phone</label>
               <input type="tel" name="phone" class="form-control" placeholder="+91 98765 43210" required>
             </div>
@@ -506,23 +495,25 @@
 
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Registration Category</label>
-              <select name="regType" class="form-control" required>
-                <option value="Academic Delegate">Academic Delegate</option>
-                <option value="Research Scholar">Postgraduate / Research Scholar</option>
-                <option value="Student">Student Participant</option>
-                <option value="Observer">Online International Observer</option>
-              </select>
+              <label class="form-label">SHUHBA</label>
+              <input type="text" name="shuhba" class="form-control" placeholder="e.g. Shuhba Name / Zone" required>
             </div>
             <div class="form-group">
-              <label class="form-label">Primary Track of Interest</label>
-              <select name="track" class="form-control" required>
-                <option value="Classical Usul">Usul al-Tafsir &amp; Classical Methodologies</option>
-                <option value="Contemporary Hermeneutics">Thematic Hermeneutics (Tafsir Mawdu'i)</option>
-                <option value="Computational NLP">Digital Tools &amp; Computational Linguistics</option>
-                <option value="Bioethics">Quranic Bioethics &amp; Societal Challenges</option>
-              </select>
+              <label class="form-label">SHUHBA NUMBER</label>
+              <input type="text" name="shuhbaNumber" class="form-control" placeholder="e.g. SH-102" required>
             </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Select Session</label>
+            <select name="sessionId" id="reg-session-select" class="form-control" required>
+              <!-- Populated dynamically by app.js -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Why Did You Join?</label>
+            <textarea name="reasonToJoin" class="form-control" placeholder="Briefly share your motivation or goals for attending this symposium..." style="min-height: 80px;" required></textarea>
           </div>
 
           <div class="modal-footer" style="padding: 1.25rem 0 0; margin-top: 1.5rem; background: transparent;">
@@ -600,7 +591,11 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Application Scripts -->
-  <script src="data.js"></script>
-  <script src="app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
+  <script src="firebase-config.js?v=2"></script>
+  <script src="data.js?v=2"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>

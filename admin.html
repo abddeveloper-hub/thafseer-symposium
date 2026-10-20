@@ -67,11 +67,11 @@
 
       <!-- Right Action Items -->
       <div class="nav-actions">
-        <div class="admin-badge-status" style="display: flex;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+        <div class="admin-badge-status" style="display: flex; gap: 0.4rem; align-items: center;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="#0D9E75">
             <circle cx="12" cy="12" r="10"/>
           </svg>
-          Editorial Session Active
+          Firebase Live Sync Active
         </div>
 
         <a href="index.html" class="back-btn-pill">
@@ -155,7 +155,11 @@
       <div class="admin-tab-nav">
         <button class="admin-tab-btn active" data-admin-tab="schedule" onclick="switchAdminTab('schedule')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          Schedule Manager
+          Schedule Manager (Timetable)
+        </button>
+        <button class="admin-tab-btn" data-admin-tab="sessions" onclick="switchAdminTab('sessions')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          Session Manager (Registrations)
         </button>
         <button class="admin-tab-btn" data-admin-tab="speakers" onclick="switchAdminTab('speakers')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
@@ -175,11 +179,11 @@
            TAB A: SCHEDULE MANAGER
            ========================================== -->
       <div class="admin-tab-pane active" id="admin-tab-schedule">
-        <!-- Add New Session Form -->
+        <!-- Add New Schedule Item Form -->
         <div class="admin-form-card">
           <div class="admin-form-header">
-            <h4>Add New Scientific Session</h4>
-            <span class="theme-tag">Instant Live Sync with Public Site</span>
+            <h4>Add Program Timetable Agenda Item</h4>
+            <span class="theme-tag">Public Schedule Page Timetable</span>
           </div>
           <form onsubmit="handleAddSessionForm(event)">
             <div class="form-grid-3">
@@ -203,7 +207,7 @@
 
             <div class="form-grid-2">
               <div class="form-group">
-                <label class="form-label">Session Title</label>
+                <label class="form-label">Item / Session Title</label>
                 <input type="text" name="title" class="form-control" placeholder="e.g. Quranic Hermeneutics & Environmental Jurisprudence" required>
               </div>
               <div class="form-group">
@@ -236,7 +240,7 @@
             <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
               <button type="submit" class="btn-emerald">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                Add &amp; Publish Session
+                Publish to Program Schedule
               </button>
             </div>
           </form>
@@ -248,14 +252,80 @@
             <thead>
               <tr>
                 <th>Time Slot</th>
-                <th>Session Title</th>
-                <th>Track</th>
+                <th>Program Item Title</th>
+                <th>Track &amp; Venue</th>
                 <th>Speakers</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="admin-schedule-tbody">
+              <!-- Populated dynamically by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           TAB B: SESSION MANAGER (REGISTRATIONS)
+           ========================================== -->
+      <div class="admin-tab-pane" id="admin-tab-sessions">
+        <!-- Add New Registration Session Form -->
+        <div class="admin-form-card">
+          <div class="admin-form-header">
+            <h4>Add New Registration Session</h4>
+            <span class="theme-tag">Selectable in Registration Dropdown</span>
+          </div>
+          <form onsubmit="handleAddRegSessionForm(event)">
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label">Session Title</label>
+                <input type="text" name="title" class="form-control" placeholder="e.g. General Academic Session 2026" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Time Slot / Duration</label>
+                <input type="text" name="timeSlot" class="form-control" placeholder="e.g. 09:00 AM – 04:30 PM" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Participant Limit (Max Seats)</label>
+                <input type="number" name="participantLimit" class="form-control" placeholder="e.g. 100" min="1" value="100" required>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Venue / Location</label>
+                <input type="text" name="venue" class="form-control" placeholder="e.g. Main Auditorium Complex" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Description / Scope</label>
+                <input type="text" name="description" class="form-control" placeholder="Contextual details on this registration session...">
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+              <button type="submit" class="btn-emerald">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Create Registration Session
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Registration Sessions Table -->
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Session Title</th>
+                <th>Time Slot</th>
+                <th>Venue</th>
+                <th>Seats &amp; Capacity</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-sessions-tbody">
               <!-- Populated dynamically by admin.js -->
             </tbody>
           </table>
@@ -458,10 +528,10 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Attendee Details</th>
-                <th>Institution / Affiliation</th>
-                <th>Category &amp; Track</th>
-                <th>Registration Type</th>
+                <th>Attendee &amp; Contact</th>
+                <th>SHUHBA &amp; Number</th>
+                <th>Selected Session</th>
+                <th>Why Joined</th>
                 <th>Status</th>
                 <th>Registration Date</th>
                 <th>Actions</th>
@@ -498,50 +568,38 @@
   <div class="modal-backdrop" id="admin-new-sub-modal">
     <div class="modal-dialog">
       <div class="modal-header">
-        <h3>Add Delegate / Paper Submission</h3>
+        <h3>Add Delegate Registration Record</h3>
         <button class="modal-close-btn" onclick="closeModal('admin-new-sub-modal')" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body">
         <form onsubmit="handleAdminNewSubmission(event)">
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Applicant Name</label>
+              <label class="form-label">Full Name &amp; Title</label>
               <input type="text" name="fullName" class="form-control" placeholder="e.g. Dr. Tariq Al-Hashimi" required>
             </div>
             <div class="form-group">
-              <label class="form-label">Email Address</label>
-              <input type="email" name="email" class="form-control" placeholder="scholar@university.edu" required>
+              <label class="form-label">WhatsApp / Contact Phone</label>
+              <input type="tel" name="phone" class="form-control" placeholder="+91 98470 12345" required>
             </div>
           </div>
 
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">University / Institution</label>
-              <input type="text" name="institution" class="form-control" placeholder="e.g. Al-Azhar University" required>
+              <label class="form-label">SHUHBA</label>
+              <input type="text" name="shuhba" class="form-control" placeholder="e.g. Shuhba Name / Zone" required>
             </div>
             <div class="form-group">
-              <label class="form-label">Contact Phone</label>
-              <input type="tel" name="phone" class="form-control" placeholder="+91 98470 12345">
+              <label class="form-label">SHUHBA NUMBER</label>
+              <input type="text" name="shuhbaNumber" class="form-control" placeholder="e.g. SH-102" required>
             </div>
           </div>
 
-          <div class="form-grid-3">
+          <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Category</label>
-              <select name="regType" class="form-control">
-                <option value="Academic Delegate">Academic Delegate</option>
-                <option value="Research Scholar">Research Scholar</option>
-                <option value="Student">Student</option>
-                <option value="Observer">Observer</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Track</label>
-              <select name="track" class="form-control">
-                <option value="Classical Usul">Classical Usul</option>
-                <option value="Contemporary Hermeneutics">Contemporary Hermeneutics</option>
-                <option value="Computational NLP">Computational NLP</option>
-                <option value="Valedictory">Valedictory</option>
+              <label class="form-label">Select Session</label>
+              <select name="sessionId" id="admin-reg-session-select" class="form-control" required>
+                <!-- Populated dynamically -->
               </select>
             </div>
             <div class="form-group">
@@ -555,8 +613,8 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Notes / Remarks</label>
-            <textarea name="abstract" class="form-control" placeholder="Enter registration or attendee notes..."></textarea>
+            <label class="form-label">Why Did You Join?</label>
+            <textarea name="reasonToJoin" class="form-control" placeholder="Enter reason for attending..." style="min-height: 80px;" required></textarea>
           </div>
 
           <div class="modal-footer" style="padding: 1rem 0 0; background: transparent;">
@@ -669,7 +727,7 @@
             </div>
           </div>
 
-          <div class="form-grid-2">
+          <div class="form-grid-3">
             <div class="form-group">
               <label class="form-label">Session Title</label>
               <input type="text" name="title" id="edit-session-title" class="form-control" required>
@@ -677,6 +735,10 @@
             <div class="form-group">
               <label class="form-label">Venue / Hall</label>
               <input type="text" name="venue" id="edit-session-venue" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Participant Limit (Max Seats)</label>
+              <input type="number" name="participantLimit" id="edit-session-participantLimit" class="form-control" min="1" required>
             </div>
           </div>
 
@@ -713,11 +775,65 @@
     </div>
   </div>
 
+  <!-- ==========================================
+       MODAL 5: EDIT REGISTRATION SESSION
+       ========================================== -->
+  <div class="modal-backdrop" id="reg-session-edit-modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Edit Registration Session</h3>
+        <button class="modal-close-btn" onclick="closeModal('reg-session-edit-modal')" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form onsubmit="handleUpdateRegSession(event)" id="edit-reg-session-form">
+          <input type="hidden" name="id" id="edit-reg-session-id">
+
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label">Session Title</label>
+              <input type="text" name="title" id="edit-reg-session-title" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Time Slot / Duration</label>
+              <input type="text" name="timeSlot" id="edit-reg-session-timeSlot" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Participant Limit (Max Seats)</label>
+              <input type="number" name="participantLimit" id="edit-reg-session-participantLimit" class="form-control" min="1" required>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Venue / Location</label>
+              <input type="text" name="venue" id="edit-reg-session-venue" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description / Scope</label>
+              <input type="text" name="description" id="edit-reg-session-description" class="form-control">
+            </div>
+          </div>
+
+          <div class="modal-footer" style="padding: 1rem 0 0; background: transparent;">
+            <button type="button" class="btn-pill-subtle" onclick="closeModal('reg-session-edit-modal')">Cancel</button>
+            <button type="submit" class="btn-emerald">
+              Save Session Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="data.js"></script>
-  <script src="admin.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
+  <script src="firebase-config.js?v=2"></script>
+  <script src="data.js?v=2"></script>
+  <script src="admin.js?v=2"></script>
 </body>
 </html>
