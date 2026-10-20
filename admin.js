@@ -47,6 +47,10 @@ function initAdminStorage() {
   AdminState.gallery = JSON.parse(localStorage.getItem(STORAGE_KEYS.GALLERY)) || [];
   AdminState.registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS)) || [];
   AdminState.speakers = JSON.parse(localStorage.getItem(STORAGE_KEYS.SPEAKERS)) || [];
+  if (AdminState.speakers.length === 0) {
+    AdminState.speakers = INITIAL_SPEAKERS;
+    try { localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(INITIAL_SPEAKERS)); } catch (e) {}
+  }
 
   if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isConnected) {
     Promise.all([

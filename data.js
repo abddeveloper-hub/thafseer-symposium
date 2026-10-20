@@ -125,6 +125,44 @@ const INITIAL_SESSIONS = [
   }
 ];
 
-const INITIAL_SPEAKERS = [];
+const INITIAL_SPEAKERS = [
+  {
+    id: "spk-101",
+    name: "Sheikhuna Badrussādat Al Ustad",
+    role: "Chief Patron & Keynote Plenary Chair",
+    affiliation: "Department of Quranic Exegesis, Ma'din Academy",
+    topic: "Preserving Sanad and Epistemic Continuity in Contemporary Quranic Hermeneutics",
+    bio: "Eminent scholar of classical Exegesis and Arabic philology, guiding higher theological research and manuscript studies for over three decades.",
+    image: "element.png"
+  },
+  {
+    id: "spk-102",
+    name: "Dr. Sayyid Ibrahim Khaleel Al-Bukhari",
+    role: "Founder & Chancellor",
+    affiliation: "Ma'din Academy & President, Malabar Islamic Council",
+    topic: "Bridging Classical Islamic Erudition and Modern Inter-Civilizational Discourse",
+    bio: "Renowned educator, humanitarian, and leader overseeing 50+ academic institutions educating over 25,000 students globally.",
+    image: "MA'DIN ACADEMY LOGO.png"
+  },
+  {
+    id: "spk-103",
+    name: "Shafi Saquafi Ustād Mundambra",
+    role: "Senior Scholar & Author",
+    affiliation: "Department of Quranic Exegesis & SABCeR",
+    topic: "Critical Methodology (Manhaj) in Mafātīh al-Ghayb of Imam Fakhr al-Dīn al-Rāzī",
+    bio: "Specialist in rational theology (Kalam) and exegesis, with extensive publications on classical exegetical methodologies.",
+    image: "SABCeR-06.png"
+  },
+  {
+    id: "spk-104",
+    name: "Nasrudheen Adany Ustad",
+    role: "Research Fellow & Lecturer",
+    affiliation: "SABCeR Research Directorate",
+    topic: "Kerala's Historic Contributions to Ilm al-Tafsīr and Arabic Exegetical Literature",
+    bio: "Historian of Islamic sciences in Malabar, researching Arabic-Malayalam exegetical manuscripts and regional commentary traditions.",
+    image: "element.png"
+  }
+];
+
 const INITIAL_GALLERY = [];
 const INITIAL_REGISTRATIONS = [];

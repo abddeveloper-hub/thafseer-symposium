@@ -55,6 +55,10 @@ function initStorage() {
   AppState.gallery = JSON.parse(localStorage.getItem(STORAGE_KEYS.GALLERY)) || [];
   AppState.registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS)) || [];
   AppState.speakers = JSON.parse(localStorage.getItem(STORAGE_KEYS.SPEAKERS)) || [];
+  if (AppState.speakers.length === 0) {
+    AppState.speakers = INITIAL_SPEAKERS;
+    try { localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(INITIAL_SPEAKERS)); } catch (e) {}
+  }
 
   if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isConnected) {
     Promise.all([
@@ -263,6 +267,16 @@ function initCountdown() {
 function renderSpeakers() {
   const container = document.getElementById('speakers-container');
   if (!container) return;
+
+  if (!AppState.speakers || AppState.speakers.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; background: var(--surface-muted); border-radius: var(--radius-lg); border: 1px dashed var(--subtle-divider);">
+        <p style="color: var(--neutral-dark-muted); font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">Keynote Faculty Profiles Being Updated</p>
+        <p style="color: var(--neutral-mid); font-size: 0.88rem;">Distinguished scholars and plenary speakers will be listed here shortly.</p>
+      </div>
+    `;
+    return;
+  }
 
   container.innerHTML = AppState.speakers.map(speaker => `
     <div class="speaker-card">
