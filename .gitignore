@@ -3,6 +3,8 @@
 Thumbs.db
 desktop.ini
 
-# Editor files
+# Editor & IDE files
 .vscode/
+.idea/
+.artifacts/
 *.log
