@@ -1,5 +1,5 @@
 /**
- * Tafsir Symposium 2026 - Firebase Realtime Database Integration
+ * Tafsir Symposium 2026 - Firebase Realtime Database & Storage Integration
  * Department of Quranic Exegesis, Ma'din Academy & SABCeR
  */
 
@@ -17,6 +17,7 @@ const firebaseConfig = {
 const FirebaseSync = {
   app: null,
   db: null,
+  storage: null,
   analytics: null,
   isConnected: false,
 
@@ -37,12 +38,16 @@ const FirebaseSync = {
         this.db = firebase.database();
       }
 
+      if (firebase.storage) {
+        this.storage = firebase.storage();
+      }
+
       if (firebase.analytics) {
         this.analytics = firebase.analytics();
       }
 
       this.isConnected = true;
-      console.log("Firebase Realtime Database initialized successfully.");
+      console.log("Firebase Realtime Database & Storage initialized successfully.");
       return true;
     } catch (err) {
       console.error("Firebase initialization error:", err);
@@ -51,13 +56,72 @@ const FirebaseSync = {
     }
   },
 
+  compressImage: function(file, maxDimension = 500, quality = 0.75) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = () => resolve(e.target.result);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  },
+
+  uploadImage: function(folder, file) {
+    return this.compressImage(file, 500, 0.75).then((compressedDataUrl) => {
+      if (!compressedDataUrl) return Promise.reject("Failed to process image.");
+
+      if (this.isConnected && this.storage) {
+        const cleanName = (file.name || 'photo.jpg').replace(/[^a-zA-Z0-9.-]/g, '_');
+        const fileName = `${folder}/${Date.now()}_${cleanName}`;
+        const storageRef = this.storage.ref().child(fileName);
+
+        return storageRef.putString(compressedDataUrl, 'data_url').then((snapshot) => {
+          return snapshot.ref.getDownloadURL().then((url) => {
+            console.log(`Firebase Storage: Uploaded image to '${fileName}' -> ${url}`);
+            return url;
+          });
+        }).catch((err) => {
+          console.warn("Firebase Storage upload fallback to compressed data URL:", err);
+          return compressedDataUrl;
+        });
+      } else {
+        return Promise.resolve(compressedDataUrl);
+      }
+    });
+  },
+
   seedInitialData: function(key, initialData) {
     if (!this.isConnected || !this.db) return Promise.resolve(initialData);
 
     const ref = this.db.ref(key);
     return ref.once('value').then(snapshot => {
       const val = snapshot.val();
-      // Only seed if Firebase database node is completely empty / missing
       if (val === null || val === undefined || (Array.isArray(val) && val.length === 0) || (typeof val === 'object' && Object.keys(val).length === 0)) {
         return ref.set(initialData).then(() => {
           console.log(`Firebase: Seeded initial data for node '${key}'`);

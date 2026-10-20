@@ -94,20 +94,28 @@ function initStorage() {
 }
 
 function saveState(key) {
+  const trySetLocal = (storageKey, data) => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(data));
+    } catch (err) {
+      console.warn(`LocalStorage quota limit warning for '${storageKey}':`, err);
+    }
+  };
+
   if (key === 'schedule') {
-    localStorage.setItem(STORAGE_KEYS.SCHEDULE, JSON.stringify(AppState.schedule));
+    trySetLocal(STORAGE_KEYS.SCHEDULE, AppState.schedule);
     if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('schedule', AppState.schedule);
   } else if (key === 'sessions') {
-    localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(AppState.sessions));
+    trySetLocal(STORAGE_KEYS.SESSIONS, AppState.sessions);
     if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('sessions', AppState.sessions);
   } else if (key === 'gallery') {
-    localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AppState.gallery));
+    trySetLocal(STORAGE_KEYS.GALLERY, AppState.gallery);
     if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('gallery', AppState.gallery);
   } else if (key === 'registrations') {
-    localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(AppState.registrations));
+    trySetLocal(STORAGE_KEYS.REGISTRATIONS, AppState.registrations);
     if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('registrations', AppState.registrations);
   } else if (key === 'speakers') {
-    localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AppState.speakers));
+    trySetLocal(STORAGE_KEYS.SPEAKERS, AppState.speakers);
     if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('speakers', AppState.speakers);
   }
 }

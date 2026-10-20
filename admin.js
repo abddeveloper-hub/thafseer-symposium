@@ -91,20 +91,28 @@ function initAdminStorage() {
 }
 
 function saveAdminState(key) {
+  const trySetLocal = (storageKey, data) => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(data));
+    } catch (err) {
+      console.warn(`LocalStorage quota limit warning for '${storageKey}':`, err);
+    }
+  };
+
   if (key === 'schedule') {
-    localStorage.setItem(STORAGE_KEYS.SCHEDULE, JSON.stringify(AdminState.schedule));
+    trySetLocal(STORAGE_KEYS.SCHEDULE, AdminState.schedule);
     if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('schedule', AdminState.schedule);
   } else if (key === 'sessions') {
-    localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(AdminState.sessions));
+    trySetLocal(STORAGE_KEYS.SESSIONS, AdminState.sessions);
     if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('sessions', AdminState.sessions);
   } else if (key === 'gallery') {
-    localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AdminState.gallery));
+    trySetLocal(STORAGE_KEYS.GALLERY, AdminState.gallery);
     if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('gallery', AdminState.gallery);
   } else if (key === 'registrations') {
-    localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(AdminState.registrations));
+    trySetLocal(STORAGE_KEYS.REGISTRATIONS, AdminState.registrations);
     if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('registrations', AdminState.registrations);
   } else if (key === 'speakers') {
-    localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AdminState.speakers));
+    trySetLocal(STORAGE_KEYS.SPEAKERS, AdminState.speakers);
     if (typeof FirebaseSync !== 'undefined') FirebaseSync.saveData('speakers', AdminState.speakers);
   }
 }
@@ -417,7 +425,9 @@ function deleteRegSession(sessionId) {
 // ==========================================
 
 let pendingNewSpeakerImage = '';
+let pendingNewSpeakerFileObj = null;
 let pendingEditSpeakerImage = '';
+let pendingEditSpeakerFileObj = null;
 
 function renderAdminSpeakersTable() {
   const tbody = document.getElementById('admin-speakers-tbody');
@@ -471,36 +481,49 @@ function handleAddSpeaker(e) {
   const role = form.role.value.trim();
   const affiliation = form.affiliation.value.trim();
   const topic = form.topic.value.trim();
-  const bio = form.bio.value.trim();
-  const urlFallback = form.imageUrl.value.trim();
+  const bio = form.bio ? form.bio.value.trim() : '';
+  const urlFallback = form.imageUrl ? form.imageUrl.value.trim() : '';
 
-  const finalImage = pendingNewSpeakerImage || urlFallback || 'element.png';
+  const saveSpeakerProfile = (imageUrl) => {
+    const newSpeaker = {
+      id: `spk-${Date.now()}`,
+      name: name,
+      role: role,
+      affiliation: affiliation,
+      topic: topic,
+      bio: bio,
+      image: imageUrl || 'element.png'
+    };
 
-  const newSpeaker = {
-    id: `spk-${Date.now()}`,
-    name: name,
-    role: role,
-    affiliation: affiliation,
-    topic: topic,
-    bio: bio,
-    image: finalImage
+    AdminState.speakers.push(newSpeaker);
+    saveAdminState('speakers');
+    renderAdminSpeakersTable();
+    renderAdminMetrics();
+
+    form.reset();
+    pendingNewSpeakerImage = '';
+    pendingNewSpeakerFileObj = null;
+    const previewBox = document.getElementById('speaker-new-preview-box');
+    if (previewBox) previewBox.style.display = 'none';
+
+    showToast('Scholar Profile Published', `"${newSpeaker.name}" added to the faculty plenary.`);
   };
 
-  AdminState.speakers.push(newSpeaker);
-  saveAdminState('speakers');
-  renderAdminSpeakersTable();
-  renderAdminMetrics();
-
-  form.reset();
-  pendingNewSpeakerImage = '';
-  const previewBox = document.getElementById('speaker-new-preview-box');
-  if (previewBox) previewBox.style.display = 'none';
-
-  showToast('Scholar Profile Published', `"${newSpeaker.name}" added to the faculty plenary.`);
+  if (pendingNewSpeakerFileObj && typeof FirebaseSync !== 'undefined' && FirebaseSync.uploadImage) {
+    showToast('Processing Photo', 'Uploading compressed scholar photo to Firebase Storage...');
+    FirebaseSync.uploadImage('speakers', pendingNewSpeakerFileObj).then((url) => {
+      saveSpeakerProfile(url);
+    }).catch(() => {
+      saveSpeakerProfile(pendingNewSpeakerImage || urlFallback || 'element.png');
+    });
+  } else {
+    saveSpeakerProfile(pendingNewSpeakerImage || urlFallback || 'element.png');
+  }
 }
 
 function clearNewSpeakerPhoto() {
   pendingNewSpeakerImage = '';
+  pendingNewSpeakerFileObj = null;
   const fileInput = document.getElementById('speaker-new-file-input');
   if (fileInput) fileInput.value = '';
   const previewBox = document.getElementById('speaker-new-preview-box');
@@ -512,12 +535,13 @@ function openEditSpeakerModal(speakerId) {
   if (!speaker) return;
 
   pendingEditSpeakerImage = '';
+  pendingEditSpeakerFileObj = null;
   document.getElementById('edit-speaker-id').value = speaker.id;
   document.getElementById('edit-speaker-name').value = speaker.name;
   document.getElementById('edit-speaker-role').value = speaker.role;
   document.getElementById('edit-speaker-affiliation').value = speaker.affiliation;
   document.getElementById('edit-speaker-topic').value = speaker.topic;
-  document.getElementById('edit-speaker-bio').value = speaker.bio;
+  document.getElementById('edit-speaker-bio').value = speaker.bio || '';
   document.getElementById('edit-speaker-image-url').value = speaker.image || '';
 
   const previewImg = document.getElementById('edit-speaker-preview-img');
@@ -536,22 +560,35 @@ function handleUpdateSpeaker(e) {
   const speaker = AdminState.speakers.find(s => s.id === id);
   if (!speaker) return;
 
-  const urlInput = form.image.value.trim();
-  const finalImage = pendingEditSpeakerImage || urlInput || speaker.image || 'element.png';
+  const urlInput = form.image ? form.image.value.trim() : '';
 
-  speaker.name = form.name.value.trim();
-  speaker.role = form.role.value.trim();
-  speaker.affiliation = form.affiliation.value.trim();
-  speaker.topic = form.topic.value.trim();
-  speaker.bio = form.bio.value.trim();
-  speaker.image = finalImage;
+  const updateProfile = (imageUrl) => {
+    speaker.name = form.name.value.trim();
+    speaker.role = form.role.value.trim();
+    speaker.affiliation = form.affiliation.value.trim();
+    speaker.topic = form.topic.value.trim();
+    speaker.bio = form.bio ? form.bio.value.trim() : '';
+    speaker.image = imageUrl || speaker.image || 'element.png';
 
-  saveAdminState('speakers');
-  renderAdminSpeakersTable();
-  renderAdminMetrics();
-  closeModal('speaker-edit-modal');
-  pendingEditSpeakerImage = '';
-  showToast('Faculty Dossier Updated', `Profile details for "${speaker.name}" saved successfully.`);
+    saveAdminState('speakers');
+    renderAdminSpeakersTable();
+    renderAdminMetrics();
+    closeModal('speaker-edit-modal');
+    pendingEditSpeakerImage = '';
+    pendingEditSpeakerFileObj = null;
+    showToast('Faculty Dossier Updated', `Profile details for "${speaker.name}" saved successfully.`);
+  };
+
+  if (pendingEditSpeakerFileObj && typeof FirebaseSync !== 'undefined' && FirebaseSync.uploadImage) {
+    showToast('Processing Photo', 'Uploading compressed photo to Firebase Storage...');
+    FirebaseSync.uploadImage('speakers', pendingEditSpeakerFileObj).then((url) => {
+      updateProfile(url);
+    }).catch(() => {
+      updateProfile(pendingEditSpeakerImage || urlInput || speaker.image || 'element.png');
+    });
+  } else {
+    updateProfile(pendingEditSpeakerImage || urlInput || speaker.image || 'element.png');
+  }
 }
 
 function deleteSpeaker(speakerId) {
@@ -606,15 +643,26 @@ function setupSpeakerDropzone() {
       alert('Please select an image file (PNG, JPG, or WEBP).');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      pendingNewSpeakerImage = event.target.result;
-      if (previewBox && previewImg) {
-        previewImg.src = pendingNewSpeakerImage;
-        previewBox.style.display = 'flex';
-      }
-    };
-    reader.readAsDataURL(file);
+    pendingNewSpeakerFileObj = file;
+    if (typeof FirebaseSync !== 'undefined' && FirebaseSync.compressImage) {
+      FirebaseSync.compressImage(file, 500, 0.75).then((dataUrl) => {
+        pendingNewSpeakerImage = dataUrl;
+        if (previewBox && previewImg) {
+          previewImg.src = pendingNewSpeakerImage;
+          previewBox.style.display = 'flex';
+        }
+      });
+    } else {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        pendingNewSpeakerImage = event.target.result;
+        if (previewBox && previewImg) {
+          previewImg.src = pendingNewSpeakerImage;
+          previewBox.style.display = 'flex';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   // Edit Speaker File Input
@@ -630,13 +678,22 @@ function setupSpeakerDropzone() {
           alert('Please select an image file.');
           return;
         }
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          pendingEditSpeakerImage = event.target.result;
-          if (editPreviewImg) editPreviewImg.src = pendingEditSpeakerImage;
-          if (editUrlInput) editUrlInput.value = '';
-        };
-        reader.readAsDataURL(file);
+        pendingEditSpeakerFileObj = file;
+        if (typeof FirebaseSync !== 'undefined' && FirebaseSync.compressImage) {
+          FirebaseSync.compressImage(file, 500, 0.75).then((dataUrl) => {
+            pendingEditSpeakerImage = dataUrl;
+            if (editPreviewImg) editPreviewImg.src = pendingEditSpeakerImage;
+            if (editUrlInput) editUrlInput.value = '';
+          });
+        } else {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            pendingEditSpeakerImage = event.target.result;
+            if (editPreviewImg) editPreviewImg.src = pendingEditSpeakerImage;
+            if (editUrlInput) editUrlInput.value = '';
+          };
+          reader.readAsDataURL(file);
+        }
       }
     });
   }
@@ -646,6 +703,7 @@ function setupSpeakerDropzone() {
       if (editUrlInput.value.trim() && editPreviewImg) {
         editPreviewImg.src = editUrlInput.value.trim();
         pendingEditSpeakerImage = '';
+        pendingEditSpeakerFileObj = null;
       }
     });
   }
@@ -654,6 +712,7 @@ function setupSpeakerDropzone() {
     urlInput.addEventListener('input', () => {
       if (urlInput.value.trim()) {
         pendingNewSpeakerImage = '';
+        pendingNewSpeakerFileObj = null;
         if (previewBox && previewImg) {
           previewImg.src = urlInput.value.trim();
           previewBox.style.display = 'flex';
@@ -668,6 +727,7 @@ function setupSpeakerDropzone() {
 // ==========================================
 
 let pendingGalleryImage = '';
+let pendingGalleryFileObj = null;
 
 function setupDropzone() {
   const dropzone = document.getElementById('gallery-dropzone');
@@ -707,15 +767,26 @@ function setupDropzone() {
       alert('Please upload an image file.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      pendingGalleryImage = event.target.result;
-      if (previewBox && previewImg) {
-        previewImg.src = pendingGalleryImage;
-        previewBox.style.display = 'flex';
-      }
-    };
-    reader.readAsDataURL(file);
+    pendingGalleryFileObj = file;
+    if (typeof FirebaseSync !== 'undefined' && FirebaseSync.compressImage) {
+      FirebaseSync.compressImage(file, 600, 0.75).then((dataUrl) => {
+        pendingGalleryImage = dataUrl;
+        if (previewBox && previewImg) {
+          previewImg.src = pendingGalleryImage;
+          previewBox.style.display = 'flex';
+        }
+      });
+    } else {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        pendingGalleryImage = event.target.result;
+        if (previewBox && previewImg) {
+          previewImg.src = pendingGalleryImage;
+          previewBox.style.display = 'flex';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   }
 }
 
@@ -727,19 +798,40 @@ function handleAddGalleryItem(e) {
   const description = form.description.value.trim();
   const urlFallback = form.imageUrl.value.trim();
 
-  const finalImage = pendingGalleryImage || urlFallback || 'assets/images/gallery-1.jpg';
+  const createAndSaveGalleryItem = (imageUrl) => {
+    const newItem = {
+      id: `gal-${Date.now()}`,
+      title: title,
+      category: category,
+      image: imageUrl || 'assets/images/gallery-1.jpg',
+      timestamp: "Oct 21, 2026 • Live Update",
+      description: description
+    };
 
-  const newItem = {
-    id: `gal-${Date.now()}`,
-    title: title,
-    category: category,
-    image: finalImage,
-    timestamp: "Oct 21, 2026 • Live Update",
-    description: description
+    AdminState.gallery.unshift(newItem);
+    saveAdminState('gallery');
+    renderAdminMetrics();
+
+    form.reset();
+    pendingGalleryImage = '';
+    pendingGalleryFileObj = null;
+    const previewBox = document.getElementById('gallery-preview-box');
+    if (previewBox) previewBox.style.display = 'none';
+
+    showToast('Photo Published', `"${newItem.title}" added to the public album.`);
   };
 
-  AdminState.gallery.unshift(newItem);
-  saveAdminState('gallery');
+  if (pendingGalleryFileObj && typeof FirebaseSync !== 'undefined' && FirebaseSync.uploadImage) {
+    showToast('Processing Photo', 'Uploading gallery photo to Firebase Storage...');
+    FirebaseSync.uploadImage('gallery', pendingGalleryFileObj).then((url) => {
+      createAndSaveGalleryItem(url);
+    }).catch(() => {
+      createAndSaveGalleryItem(pendingGalleryImage || urlFallback || 'assets/images/gallery-1.jpg');
+    });
+  } else {
+    createAndSaveGalleryItem(pendingGalleryImage || urlFallback || 'assets/images/gallery-1.jpg');
+  }
+}
   renderAdminMetrics();
 
   form.reset();
