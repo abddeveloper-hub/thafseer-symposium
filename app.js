@@ -588,7 +588,8 @@ function populateSessionSelectOptions(selectEl) {
     const filledSeats = AppState.registrations.filter(r => r.sessionId === session.id).length;
     const limit = parseInt(session.participantLimit) || 100;
     const isFull = filledSeats >= limit;
-    const label = `${session.title} (${session.timeSlot || 'Scheduled'}) - ${filledSeats}/${limit} Seats ${isFull ? '[FULL]' : ''}`;
+    const ledByText = session.ledBy ? ` [Led by ${session.ledBy}]` : '';
+    const label = `${session.title}${ledByText} (${session.timeSlot || 'Scheduled'}) - ${filledSeats}/${limit} Seats ${isFull ? '[FULL]' : ''}`;
     return `<option value="${session.id}" ${isFull ? 'disabled' : ''}>${label}</option>`;
   }).join('');
 }

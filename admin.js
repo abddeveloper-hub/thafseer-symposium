@@ -306,7 +306,7 @@ function renderAdminSessionsTable() {
   if (AdminState.sessions.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align: center; padding: 2rem; color: var(--neutral-mid);">
+        <td colspan="7" style="text-align: center; padding: 2rem; color: var(--neutral-mid);">
           No registration sessions created yet. Use the form above to create a session.
         </td>
       </tr>
@@ -322,6 +322,7 @@ function renderAdminSessionsTable() {
     return `
       <tr>
         <td style="font-weight: 700; color: var(--neutral-dark);">${session.title}</td>
+        <td style="font-weight: 600; color: var(--primary-emerald);">${session.ledBy || '—'}</td>
         <td style="font-weight: 600; color: var(--surface-deep-petrol);">${session.timeSlot || 'Full Day'}</td>
         <td>${session.venue}</td>
         <td>
@@ -351,6 +352,7 @@ function handleAddRegSessionForm(e) {
   const newSession = {
     id: `sess-${Date.now()}`,
     title: form.title.value.trim(),
+    ledBy: form.ledBy ? form.ledBy.value.trim() : '',
     timeSlot: form.timeSlot.value.trim(),
     venue: form.venue.value.trim(),
     participantLimit: parseInt(form.participantLimit.value) || 100,
@@ -371,6 +373,8 @@ function openEditRegSessionModal(sessionId) {
 
   document.getElementById('edit-reg-session-id').value = session.id;
   document.getElementById('edit-reg-session-title').value = session.title;
+  const ledByEl = document.getElementById('edit-reg-session-ledBy');
+  if (ledByEl) ledByEl.value = session.ledBy || '';
   document.getElementById('edit-reg-session-timeSlot').value = session.timeSlot || '';
   document.getElementById('edit-reg-session-participantLimit').value = session.participantLimit || 100;
   document.getElementById('edit-reg-session-venue').value = session.venue || '';
@@ -388,6 +392,7 @@ function handleUpdateRegSession(e) {
   if (!session) return;
 
   session.title = form.title.value.trim();
+  session.ledBy = form.ledBy ? form.ledBy.value.trim() : '';
   session.timeSlot = form.timeSlot.value.trim();
   session.participantLimit = parseInt(form.participantLimit.value) || 100;
   session.venue = form.venue.value.trim();

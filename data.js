@@ -116,6 +116,7 @@ const INITIAL_SESSIONS = [
   {
     id: "sess-201",
     title: "General Academic Session 2026",
+    ledBy: "Sheikhuna Badrussādat Al Ustad & Department Board",
     timeSlot: "09:00 AM – 04:30 PM",
     venue: "Main Auditorium Complex",
     participantLimit: 100,

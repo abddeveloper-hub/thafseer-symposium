@@ -277,14 +277,25 @@
             <span class="theme-tag">Selectable in Registration Dropdown</span>
           </div>
           <form onsubmit="handleAddRegSessionForm(event)">
-            <div class="form-grid-3">
+            <div class="form-grid-2">
               <div class="form-group">
                 <label class="form-label">Session Title</label>
                 <input type="text" name="title" class="form-control" placeholder="e.g. General Academic Session 2026" required>
               </div>
               <div class="form-group">
+                <label class="form-label">Led By / Session Leader</label>
+                <input type="text" name="ledBy" class="form-control" placeholder="e.g. Sheikhuna Badrussādat Al Ustad">
+              </div>
+            </div>
+
+            <div class="form-grid-3">
+              <div class="form-group">
                 <label class="form-label">Time Slot / Duration</label>
                 <input type="text" name="timeSlot" class="form-control" placeholder="e.g. 09:00 AM – 04:30 PM" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Venue / Location</label>
+                <input type="text" name="venue" class="form-control" placeholder="e.g. Main Auditorium Complex" required>
               </div>
               <div class="form-group">
                 <label class="form-label">Participant Limit (Max Seats)</label>
@@ -292,15 +303,9 @@
               </div>
             </div>
 
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label class="form-label">Venue / Location</label>
-                <input type="text" name="venue" class="form-control" placeholder="e.g. Main Auditorium Complex" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Description / Scope</label>
-                <input type="text" name="description" class="form-control" placeholder="Contextual details on this registration session...">
-              </div>
+            <div class="form-group">
+              <label class="form-label">Description / Scope</label>
+              <input type="text" name="description" class="form-control" placeholder="Contextual details on this registration session...">
             </div>
 
             <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
@@ -318,6 +323,7 @@
             <thead>
               <tr>
                 <th>Session Title</th>
+                <th>Led By</th>
                 <th>Time Slot</th>
                 <th>Venue</th>
                 <th>Seats &amp; Capacity</th>
@@ -788,14 +794,25 @@
         <form onsubmit="handleUpdateRegSession(event)" id="edit-reg-session-form">
           <input type="hidden" name="id" id="edit-reg-session-id">
 
-          <div class="form-grid-3">
+          <div class="form-grid-2">
             <div class="form-group">
               <label class="form-label">Session Title</label>
               <input type="text" name="title" id="edit-reg-session-title" class="form-control" required>
             </div>
             <div class="form-group">
+              <label class="form-label">Led By / Session Leader</label>
+              <input type="text" name="ledBy" id="edit-reg-session-ledBy" class="form-control" placeholder="e.g. Sheikhuna Badrussādat Al Ustad">
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="form-group">
               <label class="form-label">Time Slot / Duration</label>
               <input type="text" name="timeSlot" id="edit-reg-session-timeSlot" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Venue / Location</label>
+              <input type="text" name="venue" id="edit-reg-session-venue" class="form-control" required>
             </div>
             <div class="form-group">
               <label class="form-label">Participant Limit (Max Seats)</label>
@@ -803,15 +820,9 @@
             </div>
           </div>
 
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label class="form-label">Venue / Location</label>
-              <input type="text" name="venue" id="edit-reg-session-venue" class="form-control" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Description / Scope</label>
-              <input type="text" name="description" id="edit-reg-session-description" class="form-control">
-            </div>
+          <div class="form-group">
+            <label class="form-label">Description / Scope</label>
+            <input type="text" name="description" id="edit-reg-session-description" class="form-control">
           </div>
 
           <div class="modal-footer" style="padding: 1rem 0 0; background: transparent;">
