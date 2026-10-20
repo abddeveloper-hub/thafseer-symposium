@@ -1,6 +1,6 @@
 /**
  * Tafsir Symposium 2026 - Admin Portal Logic
- * Department of Quranic Exegesis, Ma'din Academy & SABCeR
+ * Department of Tafsīr and Quranic Studies, Ma'din Academy & SABCeR
  */
 
 const STORAGE_KEYS = {

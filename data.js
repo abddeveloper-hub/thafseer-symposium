@@ -1,6 +1,6 @@
 /**
  * Tafsir Symposium 2026 - Initial Data Store
- * Department of Quranic Exegesis, Ma'din Academy & SABCeR
+ * Department of Tafsīr and Quranic Studies, Ma'din Academy & SABCeR
  */
 
 // Public Program Schedule (Event Timetable / Agenda)
@@ -11,7 +11,7 @@ const INITIAL_SCHEDULE = [
     timeEnd: "08:00 AM",
     title: "Inaugural Exegesis & Address | പ്രാരംഭ ദർസ്",
     speaker: "Sheikhuna Badrussādat Al Ustad",
-    chair: "Department of Quranic Exegesis",
+    chair: "Department of Tafsīr and Quranic Studies",
     track: "Classical Usul",
     venue: "Main Auditorium",
     description: "Inaugural spiritual assembly and Quranic exegesis discourse.",
@@ -130,7 +130,7 @@ const INITIAL_SPEAKERS = [
     id: "spk-101",
     name: "Sheikhuna Badrussādat Al Ustad",
     role: "Chief Patron & Keynote Plenary Chair",
-    affiliation: "Department of Quranic Exegesis, Ma'din Academy",
+    affiliation: "Department of Tafsīr and Quranic Studies, Ma'din Academy",
     topic: "Preserving Sanad and Epistemic Continuity in Contemporary Quranic Hermeneutics",
     bio: "Eminent scholar of classical Exegesis and Arabic philology, guiding higher theological research and manuscript studies for over three decades.",
     image: "element.png"
@@ -148,7 +148,7 @@ const INITIAL_SPEAKERS = [
     id: "spk-103",
     name: "Shafi Saquafi Ustād Mundambra",
     role: "Senior Scholar & Author",
-    affiliation: "Department of Quranic Exegesis & SABCeR",
+    affiliation: "Department of Tafsīr and Quranic Studies & SABCeR",
     topic: "Critical Methodology (Manhaj) in Mafātīh al-Ghayb of Imam Fakhr al-Dīn al-Rāzī",
     bio: "Specialist in rational theology (Kalam) and exegesis, with extensive publications on classical exegetical methodologies.",
     image: "SABCeR-06.png"

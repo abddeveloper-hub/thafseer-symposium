@@ -1,5 +1,5 @@
 # Tafsir Symposium 2026 - Web Application
-**Department of Quranic Exegesis • Ma'din Academy & SABCeR Research Council**
+**Department of Tafsīr and Quranic Studies • Ma'din Academy & SABCeR Research Council**
 
 An international, responsive, multi-page web application engineered with the **"Verdant Precision"** design system for the **Tafsir Symposium 2026** (Wednesday, October 21, 2026).
 
@@ -26,7 +26,7 @@ The project has been architected with clear separation of concerns between publi
   - Live Countdown Timer targeting **October 21, 2026 09:00 AM** flanked by the official date emblem (`date.png`).
   - Action buttons: *"View Schedule"* (Deep Petrol `#0E5463`) and *"Submit Abstract / RSVP"* (Primary Emerald `#0D9E75`).
 - **About the Symposium (Split Layout)**:
-  - Left column: Department of Quranic Exegesis mission, Sanad continuity, and peer-review publishing context.
+  - Left column: Department of Tafsīr and Quranic Studies mission, Sanad continuity, and peer-review publishing context.
   - Right column: Architectural card (`#F4F8F7`) with `element.png` corner motif, showcasing the 4 key focus tracks:
     1. *Usul al-Tafsir & Classical Methodologies*
     2. *Thematic Hermeneutics (Tafsir Mawdu'i)*
