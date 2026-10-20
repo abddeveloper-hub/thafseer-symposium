@@ -46,11 +46,16 @@ function initAdminStorage() {
   AdminState.sessions = JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSIONS)) || [];
   AdminState.gallery = JSON.parse(localStorage.getItem(STORAGE_KEYS.GALLERY)) || [];
   AdminState.registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS)) || [];
-  AdminState.speakers = JSON.parse(localStorage.getItem(STORAGE_KEYS.SPEAKERS)) || [];
-  if (AdminState.speakers.length === 0) {
-    AdminState.speakers = INITIAL_SPEAKERS;
-    try { localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(INITIAL_SPEAKERS)); } catch (e) {}
-  }
+
+  const savedAdminSpeakers = JSON.parse(localStorage.getItem(STORAGE_KEYS.SPEAKERS)) || [];
+  const mergedAdminSpeakers = [...INITIAL_SPEAKERS];
+  savedAdminSpeakers.forEach(spk => {
+    if (spk && spk.id && !mergedAdminSpeakers.some(s => s.id === spk.id || s.name === spk.name)) {
+      mergedAdminSpeakers.push(spk);
+    }
+  });
+  AdminState.speakers = mergedAdminSpeakers;
+  try { localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AdminState.speakers)); } catch (e) {}
 
   if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isConnected) {
     Promise.all([
@@ -83,8 +88,15 @@ function initAdminStorage() {
         renderAdminMetrics();
       });
       FirebaseSync.syncNode('speakers', (data) => {
-        AdminState.speakers = data || [];
-        localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AdminState.speakers));
+        const firebaseData = data || [];
+        const merged = [...INITIAL_SPEAKERS];
+        firebaseData.forEach(spk => {
+          if (spk && spk.id && !merged.some(s => s.id === spk.id || s.name === spk.name)) {
+            merged.push(spk);
+          }
+        });
+        AdminState.speakers = merged;
+        try { localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AdminState.speakers)); } catch (e) {}
         renderAdminSpeakersTable();
         renderAdminMetrics();
       });
