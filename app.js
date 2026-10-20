@@ -56,13 +56,7 @@ function initStorage() {
   AppState.registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS)) || [];
 
   const savedSpeakers = JSON.parse(localStorage.getItem(STORAGE_KEYS.SPEAKERS)) || [];
-  const mergedSpeakers = [...INITIAL_SPEAKERS];
-  savedSpeakers.forEach(spk => {
-    if (spk && spk.id && !mergedSpeakers.some(s => s.id === spk.id || s.name === spk.name)) {
-      mergedSpeakers.push(spk);
-    }
-  });
-  AppState.speakers = mergedSpeakers;
+  AppState.speakers = (savedSpeakers && savedSpeakers.length > 0) ? savedSpeakers : INITIAL_SPEAKERS;
   try { localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AppState.speakers)); } catch (e) {}
 
   if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isConnected) {
@@ -92,14 +86,7 @@ function initStorage() {
         localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(AppState.registrations));
       });
       FirebaseSync.syncNode('speakers', (data) => {
-        const firebaseData = data || [];
-        const merged = [...INITIAL_SPEAKERS];
-        firebaseData.forEach(spk => {
-          if (spk && spk.id && !merged.some(s => s.id === spk.id || s.name === spk.name)) {
-            merged.push(spk);
-          }
-        });
-        AppState.speakers = merged;
+        AppState.speakers = (data && data.length > 0) ? data : INITIAL_SPEAKERS;
         try { localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AppState.speakers)); } catch (e) {}
         renderSpeakers();
       });
