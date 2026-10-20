@@ -161,9 +161,51 @@ function navigateTo(viewId) {
   }
 }
 
+function navigateToSection(sectionId) {
+  // If not on home view, switch to home view first
+  if (AppState.activeView !== 'home') {
+    AppState.activeView = 'home';
+    document.querySelectorAll('.page-view').forEach(view => {
+      view.classList.remove('active-view');
+    });
+    const targetView = document.getElementById('view-home');
+    if (targetView) targetView.classList.add('active-view');
+  }
+
+  window.location.hash = sectionId;
+
+  // Update nav links active class
+  document.querySelectorAll('.nav-link, .mobile-link').forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('data-section') === sectionId) {
+      link.classList.add('active');
+    }
+  });
+
+  closeMobileDrawer();
+
+  setTimeout(() => {
+    const targetSection = document.getElementById(`section-${sectionId}`) || document.getElementById(sectionId);
+    if (targetSection) {
+      const headerOffset = 80;
+      const elementPosition = targetSection.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  }, 100);
+}
+
 function handleHashChange() {
   const hash = window.location.hash.replace('#', '') || 'home';
-  navigateTo(hash);
+  if (['themes', 'scholars', 'video'].includes(hash)) {
+    navigateToSection(hash);
+  } else {
+    navigateTo(hash);
+  }
 }
 
 // ==========================================
