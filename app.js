@@ -133,7 +133,7 @@ function navigateTo(viewId) {
     return;
   }
 
-  const validViews = ['home', 'schedule', 'album'];
+  const validViews = ['home', 'schedule', 'album', 'video'];
   if (!validViews.includes(viewId)) {
     viewId = 'home';
   }
@@ -212,7 +212,7 @@ function navigateToSection(sectionId) {
 
 function handleHashChange() {
   const hash = window.location.hash.replace('#', '') || 'home';
-  if (['themes', 'scholars', 'video'].includes(hash)) {
+  if (['themes', 'scholars'].includes(hash)) {
     navigateToSection(hash);
   } else {
     navigateTo(hash);
