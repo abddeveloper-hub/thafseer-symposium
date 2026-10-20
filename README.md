@@ -22,7 +22,7 @@ The project has been architected with clear separation of concerns between publi
 ### 2. Page 1: Public Page (Home, Theme & About)
 - **Hero Section**:
   - Ambient floating Islamic geometric watermark using `element.png` with low opacity (8%) and continuous 360° rotation.
-  - Centered high-definition title graphic (`title symposium.png`) paired with the subtitle: *"International Academic Symposium on Methodologies of Qur'anic Exegesis & the Hermeneutical Traditions of the Mufassirūn"*.
+  - Centered high-definition title graphic (`title symposium.png`) paired with the subtitle: *"on Methodologies of Qur'anic Exegesis & the Hermeneutical Traditions of the Mufassirūn"*.
   - Live Countdown Timer targeting **October 21, 2026 09:00 AM** flanked by the official date emblem (`date.png`).
   - Action buttons: *"View Schedule"* (Deep Petrol `#0E5463`) and *"Submit Abstract / RSVP"* (Primary Emerald `#0D9E75`).
 - **About the Symposium (Split Layout)**:
