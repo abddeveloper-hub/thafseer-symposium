@@ -57,8 +57,8 @@ const FirebaseSync = {
     const ref = this.db.ref(key);
     return ref.once('value').then(snapshot => {
       const val = snapshot.val();
-      const strVal = JSON.stringify(val);
-      if (val === null || val === undefined || (Array.isArray(val) && val.length === 0 && initialData.length > 0) || strVal.includes("session-1") || strVal.includes("spk-1") || strVal.includes("gal-1") || strVal.includes("reg-101")) {
+      // Only seed if Firebase database node is completely empty / missing
+      if (val === null || val === undefined || (Array.isArray(val) && val.length === 0) || (typeof val === 'object' && Object.keys(val).length === 0)) {
         return ref.set(initialData).then(() => {
           console.log(`Firebase: Seeded initial data for node '${key}'`);
           return initialData;
@@ -94,10 +94,13 @@ const FirebaseSync = {
     }
 
     return this.db.ref(key).set(data).then(() => {
-      console.log(`Firebase: Updated node '${key}'`);
+      console.log(`Firebase: Updated node '${key}' successfully.`);
       return true;
     }).catch(err => {
       console.error(`Firebase error writing to '${key}':`, err);
+      if (err && err.message && err.message.includes("PERMISSION_DENIED")) {
+        console.error("CRITICAL: Firebase Rules are blocking writes! Change Realtime Database rules in Firebase Console to: { \".read\": true, \".write\": true }");
+      }
       return false;
     });
   }

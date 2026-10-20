@@ -30,7 +30,7 @@ const AppState = {
 
 function initStorage() {
   const currentScheduleRaw = localStorage.getItem(STORAGE_KEYS.SCHEDULE);
-  if (!currentScheduleRaw || currentScheduleRaw === '[]' || currentScheduleRaw.includes("session-1") || currentScheduleRaw.includes("Registration & Opening Reception")) {
+  if (!currentScheduleRaw || currentScheduleRaw === '[]') {
     localStorage.setItem(STORAGE_KEYS.SCHEDULE, JSON.stringify(INITIAL_SCHEDULE));
   }
   const currentSessionsRaw = localStorage.getItem(STORAGE_KEYS.SESSIONS);
@@ -38,15 +38,15 @@ function initStorage() {
     localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(typeof INITIAL_SESSIONS !== 'undefined' ? INITIAL_SESSIONS : []));
   }
   const currentGalleryRaw = localStorage.getItem(STORAGE_KEYS.GALLERY);
-  if (!currentGalleryRaw || currentGalleryRaw.includes("gal-1")) {
+  if (!currentGalleryRaw || currentGalleryRaw === '[]') {
     localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(INITIAL_GALLERY));
   }
   const currentRegRaw = localStorage.getItem(STORAGE_KEYS.REGISTRATIONS);
-  if (!currentRegRaw || currentRegRaw.includes("reg-101")) {
+  if (!currentRegRaw || currentRegRaw === '[]') {
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(INITIAL_REGISTRATIONS));
   }
   const currentSpeakersRaw = localStorage.getItem(STORAGE_KEYS.SPEAKERS);
-  if (!currentSpeakersRaw || currentSpeakersRaw.includes("spk-1")) {
+  if (!currentSpeakersRaw || currentSpeakersRaw === '[]') {
     localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(INITIAL_SPEAKERS));
   }
 
