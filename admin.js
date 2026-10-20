@@ -223,7 +223,7 @@ function handleAddSessionForm(e) {
     chair: form.chair.value.trim() || "Symposium Academic Board",
     track: form.track.value,
     venue: form.venue.value.trim() || "Auditorium Complex",
-    participantLimit: parseInt(form.participantLimit.value) || 50,
+    participantLimit: (form.participantLimit && form.participantLimit.value) ? parseInt(form.participantLimit.value) : 50,
     description: form.description.value.trim(),
     abstract: form.abstract.value.trim() || form.description.value.trim(),
     status: 'published'
@@ -834,15 +834,6 @@ function handleAddGalleryItem(e) {
   } else {
     createAndSaveGalleryItem(pendingGalleryImage || urlFallback || 'assets/images/gallery-1.jpg');
   }
-}
-  renderAdminMetrics();
-
-  form.reset();
-  pendingGalleryImage = '';
-  const previewBox = document.getElementById('gallery-preview-box');
-  if (previewBox) previewBox.style.display = 'none';
-
-  showToast('Photo Published', `"${newItem.title}" added to the public album.`);
 }
 
 // ==========================================
