@@ -2281,6 +2281,32 @@ textarea.form-control {
   .partnership-banner {
     grid-template-columns: 1fr;
     gap: 2rem;
+    padding: 1.75rem;
+  }
+
+  .partner-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .partner-logo-box {
+    width: 160px;
+    height: 75px;
+  }
+
+  .partner-text {
+    width: 100%;
+  }
+
+  .partner-text h4 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .partner-text p {
+    font-size: 0.92rem;
+    line-height: 1.6;
   }
   
   .speakers-grid {
