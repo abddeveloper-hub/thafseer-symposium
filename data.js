@@ -127,39 +127,93 @@ const INITIAL_SESSIONS = [
 
 const INITIAL_SPEAKERS = [
   {
-    id: "spk-101",
-    name: "Sheikhuna Badrussādat Al Ustad",
-    role: "Chief Patron & Keynote Plenary Chair",
-    affiliation: "Department of Tafsīr and Quranic Studies, Ma'din Academy",
-    topic: "Preserving Sanad and Epistemic Continuity in Contemporary Quranic Hermeneutics",
-    bio: "Eminent scholar of classical Exegesis and Arabic philology, guiding higher theological research and manuscript studies for over three decades.",
+    id: "spk-1792481122147",
+    order: 1,
+    name: "SHEIKHUNA BADRUSSADAT AL USTAD",
+    role: "CHAIRMAN",
+    affiliation: "MA'DIN ACADEMY",
+    topic: "INAUGURAL ADRESS",
+    bio: "ADRESSING THAFSEER",
     image: "element.png"
   },
   {
-    id: "spk-102",
-    name: "Dr. Sayyid Ibrahim Khaleel Al-Bukhari",
-    role: "Founder & Chancellor",
-    affiliation: "Ma'din Academy & President, Malabar Islamic Council",
-    topic: "Bridging Classical Islamic Erudition and Modern Inter-Civilizational Discourse",
-    bio: "Renowned educator, humanitarian, and leader overseeing 50+ academic institutions educating over 25,000 students globally.",
-    image: "MA'DIN ACADEMY LOGO.png"
+    id: "spk-1792483043213",
+    order: 2,
+    name: "SHAFI SAQUAFI MUNDAMBRA",
+    role: "PRESIDENT",
+    affiliation: "MAJMAU GROUP OF INSTITUTION",
+    topic: "THE METHODOLOGICAL FRAMEWORK OF IMAM FAKHR AL DIN AL RAZI IN MAFATIH AL GHAYB",
+    bio: "THE METHODOLOGICAL FRAMEWORK OF IMAM FAKHR AL DIN AL RAZI IN MAFATIH AL GHAYB",
+    image: "element.png"
   },
   {
-    id: "spk-103",
-    name: "Shafi Saquafi Ustād Mundambra",
-    role: "Senior Scholar & Author",
-    affiliation: "Department of Tafsīr and Quranic Studies & SABCeR",
-    topic: "Critical Methodology (Manhaj) in Mafātīh al-Ghayb of Imam Fakhr al-Dīn al-Rāzī",
-    bio: "Specialist in rational theology (Kalam) and exegesis, with extensive publications on classical exegetical methodologies.",
-    image: "SABCeR-06.png"
+    id: "spk-1792483414696",
+    order: 3,
+    name: "AHMAD SAQUAFI AL KAMILI MAMBEETHI",
+    role: "SCHOLAR",
+    affiliation: "MA'DIN KULLIYA OF ISLAMIC SCIENCE",
+    topic: "ILM AL-THAFSEER, THE GENERATIONS OF MUFASSIRUN",
+    bio: "ILM AL-THAFSEER, THE GENERATIONS OF MUFASSIRUN",
+    image: "element.png"
   },
   {
-    id: "spk-104",
-    name: "Nasrudheen Adany Ustad",
-    role: "Research Fellow & Lecturer",
-    affiliation: "SABCeR Research Directorate",
-    topic: "Kerala's Historic Contributions to Ilm al-Tafsīr and Arabic Exegetical Literature",
-    bio: "Historian of Islamic sciences in Malabar, researching Arabic-Malayalam exegetical manuscripts and regional commentary traditions.",
+    id: "spk-1792496063946",
+    order: 4,
+    name: "ABDUL HAKEEM AL ADANY",
+    role: "SCHOLAR",
+    affiliation: "MA'DIN KULLIYA OF ISLAMIC SCIENCE",
+    topic: "ILM AL-THAFSEER, THE GENERATIONS OF MUFASSIRUN",
+    bio: "ILM AL-THAFSEER, THE GENERATIONS OF MUFASSIRUN",
+    image: "element.png"
+  },
+  {
+    id: "spk-1792571094238",
+    order: 5,
+    name: "FAIZAL AHSANI RANDATHANI",
+    role: "SCHOLAR",
+    affiliation: "JAMIA NUSRATH RANDATHANI",
+    topic: "Interpreting Modern Tafsir: Methodologies, Hermeneutics, and Critical Engagement",
+    bio: "Interpreting Modern Tafsir: Methodologies, Hermeneutics, and Critical Engagement",
+    image: "element.png"
+  },
+  {
+    id: "spk-1792571589647",
+    order: 6,
+    name: "C MUHAMMED FAIZY",
+    role: "SCHOLAR",
+    affiliation: "JAMIA MARKAZ KARANTHOOR",
+    topic: "An Exordium to Ilm al-Tafsir",
+    bio: "An Exordium to Ilm al-Tafsir",
+    image: "element.png"
+  },
+  {
+    id: "spk-1792571232964",
+    order: 7,
+    name: "SWALIH ADANY EDAKKARA",
+    role: "SCHOLAR",
+    affiliation: "MA'DIN ACADEMY",
+    topic: "Interpreting Modern Tafsir: Methodologies, Hermeneutics, and Critical Engagement",
+    bio: "Interpreting Modern Tafsir: Methodologies, Hermeneutics, and Critical Engagement",
+    image: "element.png"
+  },
+  {
+    id: "spk-1792571329531",
+    order: 8,
+    name: "NASRUDEEN ADANY MANIYAKKAL",
+    role: "SCHOLAR",
+    affiliation: "MA'DIN ACADEMY",
+    topic: "Kerala's Contributions to Ilm al-Tafsir: Intellectual Traditions and Scholarly Legacies",
+    bio: "Kerala's Contributions to Ilm al-Tafsir: Intellectual Traditions and Scholarly Legacies",
+    image: "element.png"
+  },
+  {
+    id: "spk-1792571759029",
+    order: 9,
+    name: "MUHAMMAD AMEEN ADANY",
+    role: "SCHOLAR",
+    affiliation: "MA'DIN ACADEMY",
+    topic: "The Qur'an as Muhaymin: The Case of Dhū al-Qarnayn in Late Antique Context",
+    bio: "The Qur'an as Muhaymin: The Case of Dhū al-Qarnayn in Late Antique Context",
     image: "element.png"
   }
 ];

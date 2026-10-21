@@ -51,7 +51,13 @@ function initAdminStorage() {
   AdminState.registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS)) || [];
 
   const savedAdminSpeakers = JSON.parse(localStorage.getItem(STORAGE_KEYS.SPEAKERS)) || [];
-  AdminState.speakers = (savedAdminSpeakers && savedAdminSpeakers.length > 0) ? savedAdminSpeakers : INITIAL_SPEAKERS;
+  const hasLegacyDummy = savedAdminSpeakers.some(s => s.id === 'spk-101' || s.id === 'spk-102');
+  if (!currentSpeakersRaw || savedAdminSpeakers.length === 0 || hasLegacyDummy) {
+    AdminState.speakers = INITIAL_SPEAKERS;
+  } else {
+    AdminState.speakers = savedAdminSpeakers;
+  }
+  AdminState.speakers.sort((a, b) => (a.order || 0) - (b.order || 0));
   try { localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AdminState.speakers)); } catch (e) {}
 
   if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isConnected) {
@@ -86,10 +92,14 @@ function initAdminStorage() {
         renderAdminMetrics();
       });
       FirebaseSync.syncNode('speakers', (data) => {
-        AdminState.speakers = (data && data.length > 0) ? data : INITIAL_SPEAKERS;
-        try { localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AdminState.speakers)); } catch (e) {}
-        renderAdminSpeakersTable();
-        renderAdminMetrics();
+        if (data && data.length > 0) {
+          const list = Array.isArray(data) ? data : Object.values(data);
+          list.sort((a, b) => (a.order || 0) - (b.order || 0));
+          AdminState.speakers = list;
+          try { localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AdminState.speakers)); } catch (e) {}
+          renderAdminSpeakersTable();
+          renderAdminMetrics();
+        }
       });
     }).catch(err => {
       console.warn("Firebase admin sync setup error:", err);
@@ -529,6 +539,11 @@ function moveSpeaker(fromIndex, direction) {
   AdminState.speakers.splice(fromIndex, 1);
   AdminState.speakers.splice(toIndex, 0, movedSpeaker);
 
+  // Maintain explicit order property on every scholar
+  AdminState.speakers.forEach((s, idx) => {
+    s.order = idx + 1;
+  });
+
   saveAdminState('speakers');
   renderAdminSpeakersTable();
   renderAdminMetrics();
@@ -585,6 +600,11 @@ function setupSpeakerDragAndDrop() {
       AdminState.speakers.splice(draggedSpeakerIndex, 1);
       AdminState.speakers.splice(targetIndex, 0, movedSpeaker);
 
+      // Maintain explicit order property on every scholar
+      AdminState.speakers.forEach((s, idx) => {
+        s.order = idx + 1;
+      });
+
       saveAdminState('speakers');
       renderAdminSpeakersTable();
       renderAdminMetrics();
@@ -606,6 +626,7 @@ function handleAddSpeaker(e) {
   const saveSpeakerProfile = (imageUrl) => {
     const newSpeaker = {
       id: `spk-${Date.now()}`,
+      order: AdminState.speakers.length + 1,
       name: name,
       role: role,
       affiliation: affiliation,

@@ -47,56 +47,97 @@ function initStorage() {
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(INITIAL_REGISTRATIONS));
   }
   const currentSpeakersRaw = localStorage.getItem(STORAGE_KEYS.SPEAKERS);
-  if (!currentSpeakersRaw || currentSpeakersRaw === '[]') {
-    localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(INITIAL_SPEAKERS));
+  const savedSpeakers = JSON.parse(currentSpeakersRaw || '[]');
+  const hasLegacyDummy = savedSpeakers.some(s => s.id === 'spk-101' || s.id === 'spk-102');
+  if (!currentSpeakersRaw || savedSpeakers.length === 0 || hasLegacyDummy) {
+    AppState.speakers = INITIAL_SPEAKERS;
+    try { localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AppState.speakers)); } catch (e) {}
+  } else {
+    AppState.speakers = savedSpeakers;
   }
+  AppState.speakers.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-  AppState.schedule = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCHEDULE)) || [];
-  AppState.sessions = JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSIONS)) || [];
-  const loadedGallery = JSON.parse(localStorage.getItem(STORAGE_KEYS.GALLERY)) || [];
-  AppState.gallery = (loadedGallery && loadedGallery.length > 0) ? loadedGallery : ((typeof INITIAL_GALLERY !== 'undefined' && INITIAL_GALLERY.length > 0) ? INITIAL_GALLERY : []);
-  try { localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AppState.gallery)); } catch (e) {}
-  AppState.registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS)) || [];
+  // Immediate fast REST fetch to guarantee instant mobile sync (bypasses WebSocket connection delays)
+  fetchLiveSpeakers();
 
-  const savedSpeakers = JSON.parse(localStorage.getItem(STORAGE_KEYS.SPEAKERS)) || [];
-  AppState.speakers = (savedSpeakers && savedSpeakers.length > 0) ? savedSpeakers : INITIAL_SPEAKERS;
-  try { localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AppState.speakers)); } catch (e) {}
+  // Attach live real-time synchronization
+  function attachPublicSyncListeners() {
+    if (typeof FirebaseSync === 'undefined' || !FirebaseSync.isConnected) return false;
 
-  if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isConnected) {
-    Promise.all([
-      FirebaseSync.seedInitialData('schedule', AppState.schedule),
-      FirebaseSync.seedInitialData('sessions', AppState.sessions),
-      FirebaseSync.seedInitialData('gallery', AppState.gallery),
-      FirebaseSync.seedInitialData('registrations', AppState.registrations),
-      FirebaseSync.seedInitialData('speakers', AppState.speakers)
-    ]).then(() => {
-      FirebaseSync.syncNode('schedule', (data) => {
-        AppState.schedule = data || [];
-        localStorage.setItem(STORAGE_KEYS.SCHEDULE, JSON.stringify(AppState.schedule));
-        renderSchedule();
-      });
-      FirebaseSync.syncNode('sessions', (data) => {
-        AppState.sessions = data || [];
-        localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(AppState.sessions));
-      });
-      FirebaseSync.syncNode('gallery', (data) => {
-        AppState.gallery = (data && data.length > 0) ? data : ((typeof INITIAL_GALLERY !== 'undefined' && INITIAL_GALLERY.length > 0) ? INITIAL_GALLERY : []);
-        try { localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AppState.gallery)); } catch (e) {}
-        renderGallery();
-      });
-      FirebaseSync.syncNode('registrations', (data) => {
-        AppState.registrations = data || [];
-        localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(AppState.registrations));
-      });
-      FirebaseSync.syncNode('speakers', (data) => {
-        AppState.speakers = (data && data.length > 0) ? data : INITIAL_SPEAKERS;
+    FirebaseSync.syncNode('speakers', (data) => {
+      if (data && data.length > 0) {
+        const list = Array.isArray(data) ? data : Object.values(data);
+        list.sort((a, b) => (a.order || 0) - (b.order || 0));
+        AppState.speakers = list;
         try { localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AppState.speakers)); } catch (e) {}
         renderSpeakers();
-      });
-    }).catch(err => {
-      console.warn("Firebase sync setup error:", err);
+      }
     });
+
+    FirebaseSync.syncNode('schedule', (data) => {
+      if (data && data.length > 0) {
+        AppState.schedule = data;
+        try { localStorage.setItem(STORAGE_KEYS.SCHEDULE, JSON.stringify(AppState.schedule)); } catch (e) {}
+        renderSchedule();
+      }
+    });
+
+    FirebaseSync.syncNode('sessions', (data) => {
+      if (data) {
+        AppState.sessions = data;
+        try { localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(AppState.sessions)); } catch (e) {}
+      }
+    });
+
+    FirebaseSync.syncNode('gallery', (data) => {
+      if (data && data.length > 0) {
+        AppState.gallery = data;
+        try { localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AppState.gallery)); } catch (e) {}
+        renderGallery();
+      }
+    });
+
+    FirebaseSync.syncNode('registrations', (data) => {
+      if (data) {
+        AppState.registrations = data;
+        try { localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(AppState.registrations)); } catch (e) {}
+      }
+    });
+
+    return true;
   }
+
+  if (!attachPublicSyncListeners()) {
+    let attempts = 0;
+    const syncCheckInterval = setInterval(() => {
+      attempts++;
+      if (attachPublicSyncListeners() || attempts > 25) {
+        clearInterval(syncCheckInterval);
+      }
+    }, 350);
+  }
+}
+
+function fetchLiveSpeakers() {
+  if (typeof fetch === 'undefined') return;
+  fetch('https://thafseer-symposium-default-rtdb.firebaseio.com/speakers.json?t=' + Date.now())
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(data => {
+      if (!data) return;
+      const list = Array.isArray(data) ? data : Object.values(data);
+      if (list && list.length > 0) {
+        list.sort((a, b) => (a.order || 0) - (b.order || 0));
+        AppState.speakers = list;
+        try { localStorage.setItem(STORAGE_KEYS.SPEAKERS, JSON.stringify(AppState.speakers)); } catch (e) {}
+        renderSpeakers();
+      }
+    })
+    .catch(err => {
+      console.warn("Direct REST speakers fetch error:", err);
+    });
 }
 
 function saveState(key) {
@@ -280,7 +321,10 @@ function renderSpeakers() {
     return;
   }
 
-  container.innerHTML = AppState.speakers.map(speaker => `
+  // Ensure strictly ordered rendering
+  const sortedSpeakers = [...AppState.speakers].sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  container.innerHTML = sortedSpeakers.map(speaker => `
     <div class="speaker-card">
       <div class="speaker-photo-wrap">
         <img src="${speaker.image}" alt="${speaker.name}" class="speaker-photo" loading="lazy" onerror="this.onerror=null; this.src='element.png';">
