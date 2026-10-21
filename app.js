@@ -562,8 +562,11 @@ function renderGallery() {
   }).join('');
 }
 
+let isBrochureLightbox = false;
+
 function openLightbox(index) {
   if (index < 0 || index >= AppState.gallery.length) return;
+  isBrochureLightbox = false;
   AppState.currentLightboxIndex = index;
 
   const item = AppState.gallery[index];
@@ -585,6 +588,14 @@ function openLightbox(index) {
 }
 
 function navigateLightbox(step) {
+  if (isBrochureLightbox) {
+    let nextNum = brochureCurrentPage + step;
+    if (nextNum < 1) nextNum = brochureTotalPages;
+    if (nextNum > brochureTotalPages) nextNum = 1;
+    renderBrochurePage(nextNum);
+    openBrochureFullScreen();
+    return;
+  }
   let nextIndex = AppState.currentLightboxIndex + step;
   if (nextIndex < 0) nextIndex = AppState.gallery.length - 1;
   if (nextIndex >= AppState.gallery.length) nextIndex = 0;
@@ -675,10 +686,20 @@ function handleRegistrationSubmit(e) {
 // 9. GENERAL MODAL & DRAWER HELPERS
 // ==========================================
 
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.add('open');
+  }
+}
+
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) {
     modal.classList.remove('open');
+  }
+  if (modalId === 'lightbox-modal') {
+    isBrochureLightbox = false;
   }
 }
 
@@ -779,7 +800,7 @@ const brochureTotalPages = 12;
 function initBrochureViewer() {
   renderBrochurePage(brochureCurrentPage);
 
-  // Touch Swipe & Tap Navigation Support
+  // Touch Swipe Navigation Support
   const imgWrap = document.querySelector('.brochure-image-wrap');
   if (imgWrap) {
     let touchStartX = 0;
@@ -798,16 +819,6 @@ function initBrochureViewer() {
         prevBrochurePage(); // Swipe Right -> Prev Page
       }
     }, { passive: true });
-
-    imgWrap.addEventListener('click', (e) => {
-      const rect = imgWrap.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      if (clickX > rect.width * 0.5) {
-        nextBrochurePage();
-      } else {
-        prevBrochurePage();
-      }
-    });
   }
 }
 
@@ -819,13 +830,28 @@ function renderBrochurePage(num) {
   const imgEl = document.getElementById('brochure-page-img');
   if (imgEl) {
     imgEl.src = `assets/images/brochure/page_${num}.jpg`;
-    imgEl.alt = `Symposium Brochure Page ${num}`;
+    imgEl.alt = `Symposium Brochure Page ${num} of ${brochureTotalPages}`;
+  }
+
+  const indicator = document.getElementById('brochure-page-indicator');
+  if (indicator) {
+    indicator.textContent = `Page ${num} of ${brochureTotalPages}`;
   }
 
   const prevBtn = document.getElementById('btn-brochure-prev');
   const nextBtn = document.getElementById('btn-brochure-next');
   if (prevBtn) prevBtn.disabled = (num <= 1);
   if (nextBtn) nextBtn.disabled = (num >= brochureTotalPages);
+
+  // Preload adjacent pages for instantaneous flipping
+  if (num < brochureTotalPages) {
+    const nextImg = new Image();
+    nextImg.src = `assets/images/brochure/page_${num + 1}.jpg`;
+  }
+  if (num > 1) {
+    const prevImg = new Image();
+    prevImg.src = `assets/images/brochure/page_${num - 1}.jpg`;
+  }
 }
 
 function prevBrochurePage() {
@@ -839,6 +865,7 @@ function nextBrochurePage() {
 }
 
 function openBrochureFullScreen() {
+  isBrochureLightbox = true;
   openModal('lightbox-modal');
   const img = document.getElementById('lightbox-img');
   const title = document.getElementById('lightbox-title');
@@ -846,31 +873,14 @@ function openBrochureFullScreen() {
   const category = document.getElementById('lightbox-category');
   const counter = document.getElementById('lightbox-counter');
 
-  if (img) img.src = `assets/images/brochure/page_${brochureCurrentPage}.jpg`;
-  if (title) title.textContent = `Official Symposium Brochure • Page ${brochureCurrentPage} of ${brochureTotalPages}`;
-  if (desc) desc.textContent = "High-resolution brochure page. Click download button below for full PDF document.";
+  if (img) {
+    img.src = `assets/images/brochure/page_${brochureCurrentPage}.jpg`;
+    img.alt = `Official Symposium Brochure Page ${brochureCurrentPage} of ${brochureTotalPages}`;
+  }
+  if (title) title.textContent = `Official Symposium Brochure`;
+  if (desc) desc.textContent = `Page ${brochureCurrentPage} of ${brochureTotalPages} • Use arrows to flip pages or tap Close Lightbox.`;
   if (category) category.textContent = "Brochure Publication";
   if (counter) counter.textContent = `${brochureCurrentPage} / ${brochureTotalPages}`;
-}
-
-function prevBrochurePage() {
-  if (brochureCurrentPage <= 1) return;
-  brochureCurrentPage--;
-  queueRenderBrochurePage(brochureCurrentPage);
-}
-
-function nextBrochurePage() {
-  if (!brochurePdfDoc || brochureCurrentPage >= brochureTotalPages) return;
-  brochureCurrentPage++;
-  queueRenderBrochurePage(brochureCurrentPage);
-}
-
-function queueRenderBrochurePage(num) {
-  if (brochureIsRendering) {
-    brochurePageNumPending = num;
-  } else {
-    renderBrochurePage(num);
-  }
 }
 
 // ==========================================
