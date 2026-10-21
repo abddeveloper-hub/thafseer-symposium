@@ -30,8 +30,9 @@ function initAdminStorage() {
     localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(typeof INITIAL_SESSIONS !== 'undefined' ? INITIAL_SESSIONS : []));
   }
   const currentGalleryRaw = localStorage.getItem(STORAGE_KEYS.GALLERY);
-  if (!currentGalleryRaw || currentGalleryRaw === '[]') {
-    localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(INITIAL_GALLERY));
+  const savedAdminGallery = JSON.parse(currentGalleryRaw || '[]');
+  if (!currentGalleryRaw || savedAdminGallery.length === 0) {
+    localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(typeof INITIAL_GALLERY !== 'undefined' ? INITIAL_GALLERY : []));
   }
   const currentRegRaw = localStorage.getItem(STORAGE_KEYS.REGISTRATIONS);
   if (!currentRegRaw || currentRegRaw === '[]') {
@@ -44,7 +45,9 @@ function initAdminStorage() {
 
   AdminState.schedule = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCHEDULE)) || [];
   AdminState.sessions = JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSIONS)) || [];
-  AdminState.gallery = JSON.parse(localStorage.getItem(STORAGE_KEYS.GALLERY)) || [];
+  const loadedGallery = JSON.parse(localStorage.getItem(STORAGE_KEYS.GALLERY)) || [];
+  AdminState.gallery = (loadedGallery && loadedGallery.length > 0) ? loadedGallery : ((typeof INITIAL_GALLERY !== 'undefined' && INITIAL_GALLERY.length > 0) ? INITIAL_GALLERY : []);
+  try { localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AdminState.gallery)); } catch (e) {}
   AdminState.registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS)) || [];
 
   const savedAdminSpeakers = JSON.parse(localStorage.getItem(STORAGE_KEYS.SPEAKERS)) || [];
@@ -71,8 +74,9 @@ function initAdminStorage() {
         renderAdminSessionsTable();
       });
       FirebaseSync.syncNode('gallery', (data) => {
-        AdminState.gallery = data || [];
-        localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AdminState.gallery));
+        AdminState.gallery = (data && data.length > 0) ? data : ((typeof INITIAL_GALLERY !== 'undefined' && INITIAL_GALLERY.length > 0) ? INITIAL_GALLERY : []);
+        try { localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AdminState.gallery)); } catch (e) {}
+        renderAdminGalleryTable();
         renderAdminMetrics();
       });
       FirebaseSync.syncNode('registrations', (data) => {
@@ -432,14 +436,21 @@ let pendingNewSpeakerFileObj = null;
 let pendingEditSpeakerImage = '';
 let pendingEditSpeakerFileObj = null;
 
+let draggedSpeakerIndex = null;
+
 function renderAdminSpeakersTable() {
   const tbody = document.getElementById('admin-speakers-tbody');
+  const countBadge = document.getElementById('admin-speakers-count-badge');
   if (!tbody) return;
+
+  if (countBadge) {
+    countBadge.textContent = `${AdminState.speakers.length} Scholars`;
+  }
 
   if (AdminState.speakers.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" style="text-align: center; padding: 2rem; color: var(--neutral-mid);">
+        <td colspan="6" style="text-align: center; padding: 2.5rem 1rem; color: var(--neutral-mid);">
           No faculty scholars registered yet. Use the form above to add a scholar.
         </td>
       </tr>
@@ -447,8 +458,38 @@ function renderAdminSpeakersTable() {
     return;
   }
 
-  tbody.innerHTML = AdminState.speakers.map(speaker => `
-    <tr>
+  tbody.innerHTML = AdminState.speakers.map((speaker, index) => {
+    const isFirst = index === 0;
+    const isLast = index === AdminState.speakers.length - 1;
+    return `
+    <tr draggable="true" data-speaker-index="${index}" class="speaker-reorder-row">
+      <td style="text-align: center;">
+        <div class="reorder-col">
+          <span class="reorder-grip-handle" title="Drag row to reorder scholar">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="9" cy="5" r="2"></circle>
+              <circle cx="9" cy="12" r="2"></circle>
+              <circle cx="9" cy="19" r="2"></circle>
+              <circle cx="15" cy="5" r="2"></circle>
+              <circle cx="15" cy="12" r="2"></circle>
+              <circle cx="15" cy="19" r="2"></circle>
+            </svg>
+          </span>
+          <span class="order-number-badge">#${index + 1}</span>
+          <div class="reorder-arrows">
+            <button type="button" class="btn-reorder-arrow ${isFirst ? 'disabled' : ''}" onclick="moveSpeaker(${index}, -1)" title="Move up" ${isFirst ? 'disabled' : ''}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>
+            </button>
+            <button type="button" class="btn-reorder-arrow ${isLast ? 'disabled' : ''}" onclick="moveSpeaker(${index}, 1)" title="Move down" ${isLast ? 'disabled' : ''}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </td>
       <td>
         <img src="${speaker.image}" alt="${speaker.name}" class="speaker-admin-avatar" onerror="this.onerror=null; this.src='element.png';">
       </td>
@@ -474,7 +515,82 @@ function renderAdminSpeakersTable() {
         </div>
       </td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
+
+  setupSpeakerDragAndDrop();
+}
+
+function moveSpeaker(fromIndex, direction) {
+  const toIndex = fromIndex + direction;
+  if (toIndex < 0 || toIndex >= AdminState.speakers.length) return;
+
+  const movedSpeaker = AdminState.speakers[fromIndex];
+  AdminState.speakers.splice(fromIndex, 1);
+  AdminState.speakers.splice(toIndex, 0, movedSpeaker);
+
+  saveAdminState('speakers');
+  renderAdminSpeakersTable();
+  renderAdminMetrics();
+  showToast('Faculty Order Updated', `"${movedSpeaker.name}" moved to position #${toIndex + 1}.`);
+}
+
+function setupSpeakerDragAndDrop() {
+  const tbody = document.getElementById('admin-speakers-tbody');
+  if (!tbody) return;
+
+  const rows = tbody.querySelectorAll('.speaker-reorder-row');
+  rows.forEach(row => {
+    row.addEventListener('dragstart', (e) => {
+      draggedSpeakerIndex = parseInt(row.getAttribute('data-speaker-index'), 10);
+      row.classList.add('dragging-row');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', draggedSpeakerIndex);
+    });
+
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging-row');
+      rows.forEach(r => r.classList.remove('drag-over-above', 'drag-over-below'));
+      draggedSpeakerIndex = null;
+    });
+
+    row.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const targetIndex = parseInt(row.getAttribute('data-speaker-index'), 10);
+      if (draggedSpeakerIndex === null || draggedSpeakerIndex === targetIndex) return;
+
+      const rect = row.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      if (e.clientY < midY) {
+        row.classList.add('drag-over-above');
+        row.classList.remove('drag-over-below');
+      } else {
+        row.classList.add('drag-over-below');
+        row.classList.remove('drag-over-above');
+      }
+    });
+
+    row.addEventListener('dragleave', () => {
+      row.classList.remove('drag-over-above', 'drag-over-below');
+    });
+
+    row.addEventListener('drop', (e) => {
+      e.preventDefault();
+      row.classList.remove('drag-over-above', 'drag-over-below');
+      const targetIndex = parseInt(row.getAttribute('data-speaker-index'), 10);
+      if (draggedSpeakerIndex === null || draggedSpeakerIndex === targetIndex) return;
+
+      const movedSpeaker = AdminState.speakers[draggedSpeakerIndex];
+      AdminState.speakers.splice(draggedSpeakerIndex, 1);
+      AdminState.speakers.splice(targetIndex, 0, movedSpeaker);
+
+      saveAdminState('speakers');
+      renderAdminSpeakersTable();
+      renderAdminMetrics();
+      showToast('Faculty Order Updated', `"${movedSpeaker.name}" moved to position #${targetIndex + 1}.`);
+    });
+  });
 }
 
 function handleAddSpeaker(e) {
@@ -731,6 +847,8 @@ function setupSpeakerDropzone() {
 
 let pendingGalleryImage = '';
 let pendingGalleryFileObj = null;
+let pendingEditGalleryImage = '';
+let pendingEditGalleryFileObj = null;
 
 function setupDropzone() {
   const dropzone = document.getElementById('gallery-dropzone');
@@ -813,6 +931,7 @@ function handleAddGalleryItem(e) {
 
     AdminState.gallery.unshift(newItem);
     saveAdminState('gallery');
+    renderAdminGalleryTable();
     renderAdminMetrics();
 
     form.reset();
@@ -833,6 +952,225 @@ function handleAddGalleryItem(e) {
     });
   } else {
     createAndSaveGalleryItem(pendingGalleryImage || urlFallback || 'assets/images/gallery-1.jpg');
+  }
+}
+
+function renderAdminGalleryTable() {
+  const tbody = document.getElementById('admin-gallery-tbody');
+  const countBadge = document.getElementById('admin-gallery-count-badge');
+  const searchInput = document.getElementById('admin-gallery-search');
+  const filterSelect = document.getElementById('admin-gallery-filter');
+  if (!tbody) return;
+
+  const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  const categoryFilter = filterSelect ? filterSelect.value : 'All';
+
+  const filtered = AdminState.gallery.filter(item => {
+    const matchesCategory = (categoryFilter === 'All') || (item.category && item.category.toLowerCase().trim() === categoryFilter.toLowerCase().trim());
+    if (!matchesCategory) return false;
+    if (!searchQuery) return true;
+    const titleMatch = (item.title || '').toLowerCase().includes(searchQuery);
+    const descMatch = (item.description || '').toLowerCase().includes(searchQuery);
+    const catMatch = (item.category || '').toLowerCase().includes(searchQuery);
+    return titleMatch || descMatch || catMatch;
+  });
+
+  if (countBadge) {
+    countBadge.textContent = `${filtered.length} of ${AdminState.gallery.length} Photos`;
+  }
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 2.5rem 1rem; color: var(--neutral-mid);">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity: 0.4;">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <strong style="font-size: 0.95rem; color: var(--neutral-dark-muted);">No Album Media Assets Found</strong>
+            <span style="font-size: 0.82rem;">${AdminState.gallery.length === 0 ? 'Use the form above to upload the first photograph to the public album.' : 'No media items match your search/filter criteria.'}</span>
+          </div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(item => {
+    const safeTitle = (item.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const safeDesc = (item.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const safeImg = (item.image || '').replace(/'/g, "\\'");
+    return `
+      <tr>
+        <td>
+          <img src="${item.image}" alt="${item.title}" class="gallery-admin-thumb" 
+            onclick="previewAdminPhoto('${safeImg}', '${safeTitle}', '${safeDesc}')" 
+            title="Click to preview full photo"
+            onerror="this.onerror=null; this.src='element.png';">
+        </td>
+        <td>
+          <div style="font-weight: 800; color: var(--surface-deep-petrol); font-size: 0.92rem; line-height: 1.35; max-width: 250px;">
+            ${item.title}
+          </div>
+          <div style="font-size: 0.76rem; color: var(--neutral-mid); margin-top: 0.25rem;">
+            Ref: <code style="font-size: 0.72rem; padding: 0.1rem 0.35rem; background: var(--surface-muted); border-radius: 4px;">${item.id}</code>
+          </div>
+        </td>
+        <td>
+          <span class="album-cat-badge" data-cat="${item.category || ''}">${item.category || 'General'}</span>
+        </td>
+        <td style="font-size: 0.82rem; color: var(--neutral-dark-muted); white-space: nowrap;">
+          ${item.timestamp || 'Live Update'}
+        </td>
+        <td style="font-size: 0.82rem; color: var(--neutral-mid); max-width: 260px; line-height: 1.45;">
+          ${item.description || '<em style="opacity: 0.6;">No contextual notes</em>'}
+        </td>
+        <td>
+          <div class="action-btn-group">
+            <button class="btn-table-action edit" onclick="openEditGalleryModal('${item.id}')" title="Edit Album Asset">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              Edit
+            </button>
+            <button class="btn-table-action decline" onclick="deleteGalleryItem('${item.id}')" title="Remove from Album">
+              Delete
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function previewAdminPhoto(src, title, desc) {
+  const modal = document.getElementById('admin-image-preview-modal');
+  const imgEl = document.getElementById('admin-preview-modal-img');
+  const titleEl = document.getElementById('admin-preview-modal-title');
+  const descEl = document.getElementById('admin-preview-modal-desc');
+
+  if (imgEl) imgEl.src = src;
+  if (titleEl) titleEl.textContent = title;
+  if (descEl) descEl.textContent = desc;
+  if (modal) modal.classList.add('open');
+}
+
+function openEditGalleryModal(itemId) {
+  const item = AdminState.gallery.find(g => g.id === itemId);
+  if (!item) return;
+
+  pendingEditGalleryImage = '';
+  pendingEditGalleryFileObj = null;
+
+  document.getElementById('edit-gallery-id').value = item.id;
+  document.getElementById('edit-gallery-title').value = item.title;
+  document.getElementById('edit-gallery-category').value = item.category;
+  document.getElementById('edit-gallery-description').value = item.description || '';
+  document.getElementById('edit-gallery-timestamp').value = item.timestamp || '';
+  document.getElementById('edit-gallery-image-url').value = item.image || '';
+
+  const previewImg = document.getElementById('edit-gallery-preview-img');
+  if (previewImg) {
+    previewImg.src = item.image || 'element.png';
+  }
+
+  const fileInput = document.getElementById('edit-gallery-file-input');
+  if (fileInput) fileInput.value = '';
+
+  const modal = document.getElementById('gallery-edit-modal');
+  if (modal) modal.classList.add('open');
+}
+
+function handleUpdateGalleryItem(e) {
+  e.preventDefault();
+  const form = e.target;
+  const id = form.id.value;
+  const item = AdminState.gallery.find(g => g.id === id);
+  if (!item) return;
+
+  const urlInput = form.image ? form.image.value.trim() : '';
+
+  const updateAsset = (imageUrl) => {
+    item.title = form.title.value.trim();
+    item.category = form.category.value;
+    item.description = form.description ? form.description.value.trim() : '';
+    item.timestamp = (form.timestamp && form.timestamp.value.trim()) ? form.timestamp.value.trim() : item.timestamp;
+    item.image = imageUrl || item.image || 'assets/images/gallery-1.jpg';
+
+    saveAdminState('gallery');
+    renderAdminGalleryTable();
+    renderAdminMetrics();
+    closeModal('gallery-edit-modal');
+    pendingEditGalleryImage = '';
+    pendingEditGalleryFileObj = null;
+    showToast('Album Asset Updated', `Photo "${item.title}" saved successfully.`);
+  };
+
+  if (pendingEditGalleryFileObj && typeof FirebaseSync !== 'undefined' && FirebaseSync.uploadImage) {
+    showToast('Processing Photo', 'Uploading compressed photo to Firebase Storage...');
+    FirebaseSync.uploadImage('gallery', pendingEditGalleryFileObj).then((url) => {
+      updateAsset(url);
+    }).catch(() => {
+      updateAsset(pendingEditGalleryImage || urlInput || item.image || 'assets/images/gallery-1.jpg');
+    });
+  } else {
+    updateAsset(pendingEditGalleryImage || urlInput || item.image || 'assets/images/gallery-1.jpg');
+  }
+}
+
+function deleteGalleryItem(itemId) {
+  const item = AdminState.gallery.find(g => g.id === itemId);
+  const title = item ? item.title : 'this photo';
+  if (!confirm(`Are you sure you want to remove "${title}" from the public album?`)) return;
+
+  AdminState.gallery = AdminState.gallery.filter(g => g.id !== itemId);
+  saveAdminState('gallery');
+  renderAdminGalleryTable();
+  renderAdminMetrics();
+  showToast('Media Asset Removed', 'Photo removed from the public album.');
+}
+
+function setupGalleryEditUpload() {
+  const fileInput = document.getElementById('edit-gallery-file-input');
+  const previewImg = document.getElementById('edit-gallery-preview-img');
+  const urlInput = document.getElementById('edit-gallery-image-url');
+
+  if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        if (!file.type.startsWith('image/')) {
+          alert('Please select an image file (PNG, JPG, or WEBP).');
+          return;
+        }
+        pendingEditGalleryFileObj = file;
+        if (typeof FirebaseSync !== 'undefined' && FirebaseSync.compressImage) {
+          FirebaseSync.compressImage(file, 600, 0.75).then((dataUrl) => {
+            pendingEditGalleryImage = dataUrl;
+            if (previewImg) previewImg.src = pendingEditGalleryImage;
+            if (urlInput) urlInput.value = '';
+          });
+        } else {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            pendingEditGalleryImage = event.target.result;
+            if (previewImg) previewImg.src = pendingEditGalleryImage;
+            if (urlInput) urlInput.value = '';
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    });
+  }
+
+  if (urlInput) {
+    urlInput.addEventListener('input', () => {
+      if (urlInput.value.trim() && previewImg) {
+        previewImg.src = urlInput.value.trim();
+        pendingEditGalleryImage = '';
+        pendingEditGalleryFileObj = null;
+      }
+    });
   }
 }
 
@@ -1085,13 +1423,20 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAdminScheduleTable();
   renderAdminSessionsTable();
   renderAdminSpeakersTable();
+  renderAdminGalleryTable();
   renderAdminRegistrationsTable();
   setupDropzone();
   setupSpeakerDropzone();
+  setupGalleryEditUpload();
 
   const regSearchInput = document.getElementById('admin-reg-search');
   if (regSearchInput) {
     regSearchInput.addEventListener('input', renderAdminRegistrationsTable);
+  }
+
+  const gallerySearchInput = document.getElementById('admin-gallery-search');
+  if (gallerySearchInput) {
+    gallerySearchInput.addEventListener('input', renderAdminGalleryTable);
   }
 });
 
@@ -1104,6 +1449,10 @@ window.addEventListener('storage', (e) => {
   } else if (e.key === STORAGE_KEYS.SCHEDULE) {
     AdminState.schedule = JSON.parse(e.newValue || '[]');
     renderAdminScheduleTable();
+    renderAdminMetrics();
+  } else if (e.key === STORAGE_KEYS.GALLERY) {
+    AdminState.gallery = JSON.parse(e.newValue || '[]');
+    renderAdminGalleryTable();
     renderAdminMetrics();
   } else if (e.key === STORAGE_KEYS.REGISTRATIONS) {
     AdminState.registrations = JSON.parse(e.newValue || '[]');

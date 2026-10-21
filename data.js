@@ -164,5 +164,40 @@ const INITIAL_SPEAKERS = [
   }
 ];
 
-const INITIAL_GALLERY = [];
+const INITIAL_GALLERY = [
+  {
+    id: "gal-1",
+    title: "Inaugural Plenary Assembly & Academic Conclave",
+    category: "Inauguration",
+    image: "assets/images/gallery-1.jpg",
+    timestamp: "Oct 21, 2026 • 09:45 AM",
+    description: "Opening convocation at the Grand Auditorium Complex with scholars, faculty, and delegates in attendance."
+  },
+  {
+    id: "gal-2",
+    title: "High-Level Scholarly Panel on Modern Hermeneutics",
+    category: "Scholarly Panels",
+    image: "assets/images/gallery-2.jpg",
+    timestamp: "Oct 21, 2026 • 11:15 AM",
+    description: "Distinguished panelists discussing classical Arabic linguistic frameworks in contemporary philosophical inquiries."
+  },
+  {
+    id: "gal-3",
+    title: "Technical Paper Presentation: Morpho-Syntactic Analysis",
+    category: "Paper Presentations",
+    image: "assets/images/gallery-3.jpg",
+    timestamp: "Oct 21, 2026 • 02:30 PM",
+    description: "Scholarly paper presentation on computational syntax and discourse analysis in classical exegetical works."
+  },
+  {
+    id: "gal-4",
+    title: "Rare Classical Quranic Manuscripts & Research Poster Exhibition",
+    category: "Posters & Exhibits",
+    image: "assets/images/gallery-4.jpg",
+    timestamp: "Oct 21, 2026 • 03:15 PM",
+    description: "Delegates reviewing 14th-century Andalusian and Ottoman Tafsir manuscripts alongside research posters."
+  }
+];
+
 const INITIAL_REGISTRATIONS = [];
+

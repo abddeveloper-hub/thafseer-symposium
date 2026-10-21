@@ -38,8 +38,9 @@ function initStorage() {
     localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(typeof INITIAL_SESSIONS !== 'undefined' ? INITIAL_SESSIONS : []));
   }
   const currentGalleryRaw = localStorage.getItem(STORAGE_KEYS.GALLERY);
-  if (!currentGalleryRaw || currentGalleryRaw === '[]') {
-    localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(INITIAL_GALLERY));
+  const savedGallery = JSON.parse(currentGalleryRaw || '[]');
+  if (!currentGalleryRaw || savedGallery.length === 0) {
+    localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(typeof INITIAL_GALLERY !== 'undefined' ? INITIAL_GALLERY : []));
   }
   const currentRegRaw = localStorage.getItem(STORAGE_KEYS.REGISTRATIONS);
   if (!currentRegRaw || currentRegRaw === '[]') {
@@ -52,7 +53,9 @@ function initStorage() {
 
   AppState.schedule = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCHEDULE)) || [];
   AppState.sessions = JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSIONS)) || [];
-  AppState.gallery = JSON.parse(localStorage.getItem(STORAGE_KEYS.GALLERY)) || [];
+  const loadedGallery = JSON.parse(localStorage.getItem(STORAGE_KEYS.GALLERY)) || [];
+  AppState.gallery = (loadedGallery && loadedGallery.length > 0) ? loadedGallery : ((typeof INITIAL_GALLERY !== 'undefined' && INITIAL_GALLERY.length > 0) ? INITIAL_GALLERY : []);
+  try { localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AppState.gallery)); } catch (e) {}
   AppState.registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS)) || [];
 
   const savedSpeakers = JSON.parse(localStorage.getItem(STORAGE_KEYS.SPEAKERS)) || [];
@@ -77,8 +80,8 @@ function initStorage() {
         localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(AppState.sessions));
       });
       FirebaseSync.syncNode('gallery', (data) => {
-        AppState.gallery = data || [];
-        localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AppState.gallery));
+        AppState.gallery = (data && data.length > 0) ? data : ((typeof INITIAL_GALLERY !== 'undefined' && INITIAL_GALLERY.length > 0) ? INITIAL_GALLERY : []);
+        try { localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AppState.gallery)); } catch (e) {}
         renderGallery();
       });
       FirebaseSync.syncNode('registrations', (data) => {
@@ -533,28 +536,25 @@ function renderGallery() {
     return;
   }
 
-  container.innerHTML = filtered.map((item, index) => {
+  container.innerHTML = filtered.map((item) => {
     const globalIndex = AppState.gallery.findIndex(g => g.id === item.id);
     return `
-      <div class="album-card" onclick="openLightbox(${globalIndex})">
-        <div class="album-img-wrap">
-          <img src="${item.image}" alt="${item.title}" class="album-img" loading="lazy">
-          <div class="album-overlay-badge">${item.category}</div>
-          <div class="album-zoom-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              <line x1="11" y1="8" x2="11" y2="14"></line>
-              <line x1="8" y1="11" x2="14" y2="11"></line>
-            </svg>
+      <div class="album-photo-item" onclick="openLightbox(${globalIndex})" role="button" tabindex="0" title="${item.title} — Tap to view details">
+        <img src="${item.image}" alt="${item.title}" class="album-photo-img" loading="lazy" onerror="this.onerror=null; this.src='element.png';">
+        <div class="album-photo-scrim">
+          <div class="album-photo-overlay-top">
+            <span class="album-photo-tag">${item.category || 'Symposium Archive'}</span>
           </div>
-        </div>
-        <div class="album-caption-wrap">
-          <h4 class="album-caption-title">${item.title}</h4>
-          <p class="album-caption-desc">${item.description || ''}</p>
-          <div class="album-meta-row">
-            <span>${item.timestamp}</span>
-            <span style="color: var(--primary-emerald); font-weight: 700;">Click to Expand ↗</span>
+          <div class="album-photo-overlay-bottom">
+            <span class="album-photo-view-hint">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <line x1="11" y1="8" x2="11" y2="14"></line>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+              </svg>
+              Tap to view details
+            </span>
           </div>
         </div>
       </div>
@@ -576,15 +576,43 @@ function openLightbox(index) {
   const category = document.getElementById('lightbox-category');
   const desc = document.getElementById('lightbox-desc');
   const counter = document.getElementById('lightbox-counter');
+  const timestamp = document.getElementById('lightbox-timestamp');
 
-  img.src = item.image;
-  img.alt = item.title;
-  title.textContent = item.title;
-  category.textContent = item.category;
-  desc.textContent = item.description || '';
-  counter.textContent = `${index + 1} / ${AppState.gallery.length}`;
+  if (img) {
+    img.src = item.image;
+    img.alt = item.title;
+  }
+  if (title) title.textContent = item.title;
+  if (category) category.textContent = item.category || 'Symposium Archive';
+  if (desc) {
+    desc.textContent = item.description || 'Photographic archival record from Tafsir Symposium 2026.';
+  }
+  if (counter) counter.textContent = `${index + 1} / ${AppState.gallery.length}`;
+  if (timestamp) timestamp.textContent = item.timestamp || '';
 
-  modal.classList.add('open');
+  if (modal) modal.classList.add('open');
+}
+
+function initLightboxTouchSwipe() {
+  const frame = document.querySelector('.lightbox-img-frame');
+  if (!frame) return;
+
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  frame.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+
+  frame.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    const diff = touchStartX - touchEndX;
+    if (diff > 45) {
+      navigateLightbox(1);
+    } else if (diff < -45) {
+      navigateLightbox(-1);
+    }
+  }, { passive: true });
 }
 
 function navigateLightbox(step) {
@@ -915,6 +943,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderSchedule();
   renderGallery();
   initBrochureViewer();
+  initLightboxTouchSwipe();
 
   // Listen to hash changes
   window.addEventListener('hashchange', handleHashChange);

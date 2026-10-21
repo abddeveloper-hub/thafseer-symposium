@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" href="element.png">
   
   <!-- Design System CSS -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=15">
   
   <style>
     /* Admin Specific Polished Accents */
@@ -420,16 +420,30 @@
           </form>
         </div>
 
-        <!-- Existing Faculty Scholars Table -->
+        <!-- Existing Faculty Scholars Table & Reorder Controls -->
+        <div class="table-filter-bar" style="margin-top: 2rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--neutral-mid);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color: var(--primary-emerald); flex-shrink: 0;">
+              <path d="M7 15l5 5 5-5"></path>
+              <path d="M7 9l5-5 5 5"></path>
+            </svg>
+            <span><strong>Reorder Faculty:</strong> Drag rows via <strong>⠿</strong> or click <strong>▲ / ▼</strong> to control scholar priority on the public website.</span>
+          </div>
+          <div>
+            <span class="status-chip accepted" id="admin-speakers-count-badge">4 Scholars</span>
+          </div>
+        </div>
+
         <div class="table-responsive">
-          <table class="data-table">
+          <table class="data-table" id="admin-speakers-table">
             <thead>
               <tr>
+                <th style="width: 100px; text-align: center;">Order</th>
                 <th style="width: 70px;">Photo</th>
                 <th>Scholar Name &amp; Role</th>
                 <th>Institution / Affiliation</th>
                 <th>Keynote Address / Topic</th>
-                <th>Actions</th>
+                <th style="width: 140px;">Actions</th>
               </tr>
             </thead>
             <tbody id="admin-speakers-tbody">
@@ -506,6 +520,52 @@
               </button>
             </div>
           </form>
+        </div>
+
+        <!-- Album Media Assets Table & Management Desk -->
+        <div class="table-filter-bar" style="margin-top: 2rem;">
+          <div style="display: flex; gap: 0.75rem; align-items: center; flex: 1; max-width: 580px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 220px;">
+              <input type="text" id="admin-gallery-search" class="form-control" placeholder="Search album photos by title, caption, or category...">
+            </div>
+            <div style="min-width: 180px;">
+              <select id="admin-gallery-filter" class="form-control" onchange="renderAdminGalleryTable()">
+                <option value="All">All Categories</option>
+                <option value="Inauguration">Inauguration</option>
+                <option value="Paper Presentations">Paper Presentations</option>
+                <option value="Scholarly Panels">Scholarly Panels</option>
+                <option value="Posters & Exhibits">Posters &amp; Exhibits</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <span class="status-chip accepted" id="admin-gallery-count-badge" style="font-size: 0.82rem; padding: 0.4rem 0.85rem;">
+              0 Photos in Album
+            </span>
+            <a href="index.html#album" target="_blank" class="btn-pill-subtle" title="Preview public album in new tab" style="font-size: 0.8rem; text-decoration: none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              View Live Album ↗
+            </a>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 80px;">Photo</th>
+                <th>Title &amp; Reference</th>
+                <th>Category Tag</th>
+                <th>Date / Time</th>
+                <th>Caption &amp; Context</th>
+                <th style="width: 140px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-gallery-tbody">
+              <!-- Populated dynamically by admin.js -->
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -836,6 +896,90 @@
     </div>
   </div>
 
+  <!-- ==========================================
+       MODAL 6: EDIT ALBUM / GALLERY MEDIA ASSET
+       ========================================== -->
+  <div class="modal-backdrop" id="gallery-edit-modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Edit Album Media Asset</h3>
+        <button class="modal-close-btn" onclick="closeModal('gallery-edit-modal')" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form onsubmit="handleUpdateGalleryItem(event)" id="edit-gallery-form">
+          <input type="hidden" name="id" id="edit-gallery-id">
+
+          <!-- Photo preview & change row -->
+          <div style="display: flex; gap: 1.25rem; align-items: center; margin-bottom: 1.5rem; padding: 1rem; background: var(--surface-muted); border-radius: var(--radius-md); border: 1px solid var(--subtle-divider);">
+            <img id="edit-gallery-preview-img" src="" alt="Album Preview" style="width: 96px; height: 72px; border-radius: var(--radius-md); object-fit: cover; border: 2px solid var(--primary-emerald); background: #FFFFFF; flex-shrink: 0;">
+            <div style="flex: 1; min-width: 0;">
+              <label class="form-label" style="margin-bottom: 0.25rem;">Replace Media Photo</label>
+              <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <input type="file" id="edit-gallery-file-input" accept="image/*" style="display: none;">
+                <button type="button" class="btn-pill-subtle" onclick="document.getElementById('edit-gallery-file-input').click()" style="padding: 0.35rem 0.85rem; font-size: 0.8rem;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  Upload New Photo
+                </button>
+                <span style="font-size: 0.78rem; color: var(--neutral-mid);">PNG, JPG, WEBP (up to 10MB)</span>
+              </div>
+              <input type="text" name="image" id="edit-gallery-image-url" class="form-control" style="height: 38px; margin-top: 0.5rem; font-size: 0.85rem;" placeholder="assets/images/... or https://...">
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Image Title / Caption</label>
+              <input type="text" name="title" id="edit-gallery-title" class="form-control" placeholder="e.g. Bilateral Academic MoU Signing" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Album Category Tag</label>
+              <select name="category" id="edit-gallery-category" class="form-control" required>
+                <option value="Inauguration">Inauguration</option>
+                <option value="Paper Presentations">Paper Presentations</option>
+                <option value="Scholarly Panels">Scholarly Panels</option>
+                <option value="Posters & Exhibits">Posters &amp; Exhibits</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Timestamp / Display Date</label>
+            <input type="text" name="timestamp" id="edit-gallery-timestamp" class="form-control" placeholder="e.g. Oct 21, 2026 • 09:45 AM">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Caption Description / Notes</label>
+            <textarea name="description" id="edit-gallery-description" class="form-control" style="min-height: 90px;" placeholder="Contextual notes on scholars, paper titles, and proceedings..."></textarea>
+          </div>
+
+          <div class="modal-footer" style="padding: 1rem 0 0; background: transparent;">
+            <button type="button" class="btn-pill-subtle" onclick="closeModal('gallery-edit-modal')">Cancel</button>
+            <button type="submit" class="btn-emerald">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Save Album Asset Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 7: QUICK IMAGE PREVIEW MODAL
+       ========================================== -->
+  <div class="modal-backdrop" id="admin-image-preview-modal">
+    <div class="modal-dialog" style="max-width: 640px; padding: 1.5rem; background: var(--surface-base);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h4 id="admin-preview-modal-title" style="font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--surface-deep-petrol);">Preview Media</h4>
+        <button class="modal-close-btn" onclick="closeModal('admin-image-preview-modal')" aria-label="Close dialog">&times;</button>
+      </div>
+      <div style="text-align: center; background: #000; border-radius: var(--radius-md); overflow: hidden; max-height: 65vh; display: flex; align-items: center; justify-content: center;">
+        <img id="admin-preview-modal-img" src="" alt="Album Preview" style="max-width: 100%; max-height: 65vh; object-fit: contain;">
+      </div>
+      <p id="admin-preview-modal-desc" style="font-size: 0.88rem; color: var(--neutral-dark-muted); margin-top: 1rem; line-height: 1.5; text-align: left;"></p>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
@@ -844,8 +988,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
-  <script src="firebase-config.js?v=12"></script>
-  <script src="data.js?v=12"></script>
-  <script src="admin.js?v=12"></script>
+  <script src="firebase-config.js?v=15"></script>
+  <script src="data.js?v=15"></script>
+  <script src="admin.js?v=15"></script>
 </body>
 </html>

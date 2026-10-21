@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" href="element.png">
   
   <!-- Design System CSS -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body>
 
@@ -579,7 +579,7 @@
           <div class="section-header">
             <span class="section-badge">Visual Archives</span>
             <h2>Symposium Media Gallery &amp; Exhibits</h2>
-            <p>Photographic documentation of scholarly sessions, research deliberations, keynote lectures, and rare manuscript exhibitions.</p>
+            <p>Photographic archives of scholarly deliberations, keynote lectures, and research exhibitions. Tap any photograph to view title, details, and context.</p>
           </div>
 
           <!-- Gallery Filter Header -->
@@ -799,13 +799,16 @@
           </button>
         </div>
         <div class="lightbox-caption-panel">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-            <span class="track-tag-badge" id="lightbox-category">Category</span>
-            <span style="font-size: 0.8rem; color: var(--neutral-mid);" id="lightbox-counter">1 / 4</span>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <span class="track-tag-badge" id="lightbox-category">Category</span>
+              <span style="font-size: 0.8rem; color: var(--neutral-mid); font-weight: 600;" id="lightbox-timestamp">Oct 21, 2026</span>
+            </div>
+            <span style="font-size: 0.82rem; font-weight: 700; color: var(--neutral-mid);" id="lightbox-counter">1 / 4</span>
           </div>
-          <h3 id="lightbox-title" style="font-size: 1.25rem; font-weight: 800; color: var(--neutral-dark); margin-bottom: 0.4rem;"></h3>
-          <p id="lightbox-desc" style="font-size: 0.9rem; color: var(--neutral-dark-muted); line-height: 1.5;"></p>
-          <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+          <h3 id="lightbox-title" style="font-size: 1.3rem; font-weight: 800; color: var(--neutral-dark); margin-bottom: 0.5rem; line-height: 1.35;"></h3>
+          <p id="lightbox-desc" style="font-size: 0.92rem; color: var(--neutral-dark-muted); line-height: 1.6;"></p>
+          <div style="display: flex; justify-content: flex-end; margin-top: 1.25rem;">
             <button class="btn-pill-subtle" onclick="closeModal('lightbox-modal')">Close Lightbox</button>
           </div>
         </div>
@@ -883,8 +886,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
-  <script src="firebase-config.js?v=12"></script>
-  <script src="data.js?v=12"></script>
-  <script src="app.js?v=12"></script>
+  <script src="firebase-config.js?v=15"></script>
+  <script src="data.js?v=15"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>
