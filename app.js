@@ -770,6 +770,112 @@ document.addEventListener('click', (e) => {
 });
 
 // ==========================================
+// INTERACTIVE BROCHURE PDF VIEWER
+// ==========================================
+
+let brochurePdfDoc = null;
+let brochureCurrentPage = 1;
+let brochureTotalPages = 1;
+let brochureIsRendering = false;
+let brochurePageNumPending = null;
+
+function initBrochureViewer() {
+  const canvas = document.getElementById('brochure-canvas');
+  if (!canvas) return;
+
+  const pdfUrl = 'Brochure TS.pdf';
+
+  if (typeof pdfjsLib === 'undefined') {
+    console.warn("PDF.js library not loaded.");
+    return;
+  }
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  pdfjsLib.getDocument(pdfUrl).promise.then(pdfDoc_ => {
+    brochurePdfDoc = pdfDoc_;
+    brochureTotalPages = pdfDoc_.numPages;
+
+    const pageIndicator = document.getElementById('brochure-page-num');
+    if (pageIndicator) pageIndicator.textContent = `Page ${brochureCurrentPage} / ${brochureTotalPages}`;
+
+    const loadingOverlay = document.getElementById('brochure-loading');
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
+
+    renderBrochurePage(brochureCurrentPage);
+  }).catch(err => {
+    console.warn("Brochure PDF load error:", err);
+    const loadingOverlay = document.getElementById('brochure-loading');
+    if (loadingOverlay) {
+      loadingOverlay.innerHTML = `<span style="color: var(--neutral-dark-muted); font-size: 0.9rem;">Interactive preview ready. Use the download button below to view the brochure.</span>`;
+    }
+  });
+}
+
+function renderBrochurePage(num) {
+  if (!brochurePdfDoc) return;
+  brochureIsRendering = true;
+
+  brochurePdfDoc.getPage(num).then(page => {
+    const canvas = document.getElementById('brochure-canvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const containerWidth = canvas.parentElement ? canvas.parentElement.clientWidth : 800;
+
+    const unscaledViewport = page.getViewport({ scale: 1 });
+    const scale = Math.min((containerWidth - 20) / unscaledViewport.width, 2.0);
+    const viewport = page.getViewport({ scale: scale > 0.5 ? scale : 1.0 });
+
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    const renderContext = {
+      canvasContext: ctx,
+      viewport: viewport
+    };
+
+    const renderTask = page.render(renderContext);
+
+    renderTask.promise.then(() => {
+      brochureIsRendering = false;
+      if (brochurePageNumPending !== null) {
+        renderBrochurePage(brochurePageNumPending);
+        brochurePageNumPending = null;
+      }
+    });
+  });
+
+  const pageIndicator = document.getElementById('brochure-page-num');
+  if (pageIndicator) pageIndicator.textContent = `Page ${num} / ${brochureTotalPages}`;
+
+  const prevBtn = document.getElementById('btn-brochure-prev');
+  const nextBtn = document.getElementById('btn-brochure-next');
+  if (prevBtn) prevBtn.disabled = (num <= 1);
+  if (nextBtn) nextBtn.disabled = (num >= brochureTotalPages);
+}
+
+function prevBrochurePage() {
+  if (brochureCurrentPage <= 1) return;
+  brochureCurrentPage--;
+  queueRenderBrochurePage(brochureCurrentPage);
+}
+
+function nextBrochurePage() {
+  if (!brochurePdfDoc || brochureCurrentPage >= brochureTotalPages) return;
+  brochureCurrentPage++;
+  queueRenderBrochurePage(brochureCurrentPage);
+}
+
+function queueRenderBrochurePage(num) {
+  if (brochureIsRendering) {
+    brochurePageNumPending = num;
+  } else {
+    renderBrochurePage(num);
+  }
+}
+
+// ==========================================
 // 12. INITIALIZATION ON DOM READY
 // ==========================================
 
@@ -779,6 +885,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderSpeakers();
   renderSchedule();
   renderGallery();
+  initBrochureViewer();
 
   // Listen to hash changes
   window.addEventListener('hashchange', handleHashChange);

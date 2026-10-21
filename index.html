@@ -288,6 +288,56 @@
         </div>
       </section>
 
+      <!-- OFFICIAL SYMPOSIUM BROCHURE VIEWER -->
+      <section class="section" id="section-brochure">
+        <a id="brochure" style="position: relative; top: -100px; display: block; visibility: hidden;"></a>
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Official Publication</span>
+            <h2>Symposium Brochure &amp; Program Leaflet</h2>
+            <p>Flip through the official symposium brochure pages or download the complete PDF document.</p>
+          </div>
+
+          <div class="brochure-viewer-card">
+            <img src="element.png" alt="" class="brochure-corner-motif" aria-hidden="true">
+
+            <!-- Interactive PDF Canvas Viewport -->
+            <div class="brochure-viewport">
+              <div class="brochure-canvas-wrap">
+                <canvas id="brochure-canvas"></canvas>
+                <div class="brochure-loading-overlay" id="brochure-loading">
+                  <div class="spinner"></div>
+                  <span>Loading Official Brochure PDF...</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Brochure Control Toolbar -->
+            <div class="brochure-controls-bar">
+              <div class="brochure-page-nav">
+                <button class="btn-brochure-nav" id="btn-brochure-prev" onclick="prevBrochurePage()" aria-label="Previous Page" disabled>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  Previous
+                </button>
+                <span class="brochure-page-indicator" id="brochure-page-num">Page 1 / 1</span>
+                <button class="btn-brochure-nav" id="btn-brochure-next" onclick="nextBrochurePage()" aria-label="Next Page">
+                  Next
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+              </div>
+
+              <div class="brochure-action-btns">
+                <a href="Brochure TS.pdf" download="Brochure TS.pdf" class="btn-emerald">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  Download Brochure (PDF)
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       <!-- KEYNOTE SPEAKERS HIGHLIGHT -->
       <section class="section section-muted" id="section-scholars">
         <a id="scholars" style="position: relative; top: -100px; display: block; visibility: hidden;"></a>
@@ -657,6 +707,7 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Application Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
