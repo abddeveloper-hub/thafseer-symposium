@@ -63,6 +63,7 @@ function initStorage() {
 
   // Immediate fast REST fetch to guarantee instant mobile sync (bypasses WebSocket connection delays)
   fetchLiveSpeakers();
+  fetchLiveGallery();
 
   // Attach live real-time synchronization
   function attachPublicSyncListeners() {
@@ -95,9 +96,15 @@ function initStorage() {
 
     FirebaseSync.syncNode('gallery', (data) => {
       if (data && data.length > 0) {
-        AppState.gallery = data;
+        const list = Array.isArray(data) ? data : Object.values(data);
+        const hasOutro = list.some(g => (g.videoUrl && g.videoUrl.includes('Tafsir_Symposium_Outro_9x16.mp4')) || g.id === 'gal-vid-1');
+        if (!hasOutro && typeof INITIAL_GALLERY !== 'undefined' && INITIAL_GALLERY[0]) {
+          list.push(INITIAL_GALLERY[0]);
+        }
+        AppState.gallery = list;
         try { localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AppState.gallery)); } catch (e) {}
         renderGallery();
+        renderPublicHomeVideos();
       }
     });
 
@@ -141,6 +148,32 @@ function fetchLiveSpeakers() {
     })
     .catch(err => {
       console.warn("Direct REST speakers fetch error:", err);
+    });
+}
+
+function fetchLiveGallery() {
+  if (typeof fetch === 'undefined') return;
+  fetch('https://thafseer-symposium-default-rtdb.firebaseio.com/gallery.json?t=' + Date.now())
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(data => {
+      if (!data) return;
+      const list = Array.isArray(data) ? data : Object.values(data);
+      if (list && list.length > 0) {
+        const hasOutro = list.some(g => (g.videoUrl && g.videoUrl.includes('Tafsir_Symposium_Outro_9x16.mp4')) || g.id === 'gal-vid-1');
+        if (!hasOutro && typeof INITIAL_GALLERY !== 'undefined' && INITIAL_GALLERY[0]) {
+          list.push(INITIAL_GALLERY[0]);
+        }
+        AppState.gallery = list;
+        try { localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AppState.gallery)); } catch (e) {}
+        renderGallery();
+        renderPublicHomeVideos();
+      }
+    })
+    .catch(err => {
+      console.warn("Direct REST gallery fetch error:", err);
     });
 }
 
@@ -633,6 +666,114 @@ function renderGallery() {
   }).join('');
 }
 
+function renderPublicHomeVideos() {
+  const container = document.getElementById('home-video-reels-container');
+  if (!container) return;
+
+  const videoItems = AppState.gallery.filter(item => 
+    item.type === 'video' || item.category === 'Videos' || (item.videoUrl && item.videoUrl.trim() !== '')
+  );
+
+  if (videoItems.length === 0) {
+    if (typeof INITIAL_GALLERY !== 'undefined' && INITIAL_GALLERY[0] && INITIAL_GALLERY[0].type === 'video') {
+      videoItems.push(INITIAL_GALLERY[0]);
+    }
+  }
+
+  container.innerHTML = videoItems.map((item, idx) => {
+    const globalIdx = AppState.gallery.findIndex(g => g.id === item.id);
+    const thumb = item.poster || item.image || 'SABCeR-06.png';
+    return `
+      <div class="home-video-reel-card" onclick="loadHomeFeaturedVideo(${globalIdx >= 0 ? globalIdx : idx})" role="button" tabindex="0" title="${item.title} — Click to Play Video">
+        <div class="home-video-reel-thumb-wrap">
+          <img src="${thumb}" alt="${item.title}" class="home-video-reel-thumb" onerror="this.onerror=null; this.src='SABCeR-06.png';">
+          <div class="home-video-reel-play-btn" title="Play Video">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="6 4 20 12 6 20 6 4"></polygon>
+            </svg>
+          </div>
+          <div class="video-pill-badge" style="position: absolute; bottom: 8px; right: 8px; z-index: 2;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+            <span>VIDEO</span>
+          </div>
+        </div>
+        <div class="home-video-reel-info">
+          <span style="font-size: 0.72rem; font-weight: 700; color: var(--primary-emerald); text-transform: uppercase; letter-spacing: 0.05em;">${item.category || 'Videos'}</span>
+          <h5 class="home-video-reel-title">${item.title}</h5>
+          <div class="home-video-reel-meta">
+            <span>${item.timestamp || 'Official Video'}</span>
+            <span style="color: var(--primary-emerald); font-weight: 700;">Watch Reel &rarr;</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function loadHomeFeaturedVideo(index) {
+  const item = (index >= 0 && index < AppState.gallery.length) ? AppState.gallery[index] : null;
+  if (!item) return;
+
+  const video = document.getElementById('home-symposium-teaser-video');
+  const iframe = document.getElementById('home-symposium-youtube-iframe');
+  const titleEl = document.getElementById('home-video-active-title');
+  const descEl = document.getElementById('home-video-active-desc');
+  const tagEl = document.getElementById('home-video-active-tag');
+
+  if (titleEl) titleEl.textContent = item.title;
+  if (descEl) descEl.textContent = item.description || "Official multimedia presentation from Tafsir Symposium 2026.";
+  if (tagEl) tagEl.textContent = item.category || "Official Video";
+
+  const mediaSrc = item.videoUrl || item.image || 'Tafsir_Symposium_Outro_9x16.mp4';
+  const ytEmbed = getYouTubeEmbedUrl(mediaSrc);
+
+  if (ytEmbed) {
+    if (video) { video.pause(); video.style.display = 'none'; }
+    if (iframe) {
+      iframe.src = ytEmbed;
+      iframe.style.display = 'block';
+    }
+  } else {
+    if (iframe) { iframe.src = ''; iframe.style.display = 'none'; }
+    if (video) {
+      video.style.display = 'block';
+      video.src = mediaSrc;
+      video.poster = item.poster || item.image || 'SABCeR-06.png';
+      video.onerror = () => {
+        console.warn("Home video failed, fallback to outro reel:", video.src);
+        video.onerror = null;
+        video.src = 'Tafsir_Symposium_Outro_9x16.mp4';
+        video.load();
+        video.play().catch(() => {});
+      };
+      video.load();
+      video.play().catch(() => {});
+    }
+  }
+
+  showToast('Playing Video', `Now playing: "${item.title.substring(0, 32)}..."`);
+
+  // Scroll to video player
+  const sectionVideo = document.getElementById('section-video');
+  if (sectionVideo) {
+    const headerOffset = 80;
+    const elementPosition = sectionVideo.getBoundingClientRect().top;
+    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+    window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+  }
+}
+
+function playHomeFeaturedVideo() {
+  const video = document.getElementById('home-symposium-teaser-video');
+  if (video) {
+    video.play().then(() => {
+      showToast('Playing Video', 'Starting symposium video presentation.');
+    }).catch(err => {
+      console.warn("Video playback requires user gesture:", err);
+    });
+  }
+}
+
 function getYouTubeEmbedUrl(url) {
   if (!url) return '';
   const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\w-]{11})/);
@@ -686,7 +827,14 @@ function openLightbox(index) {
     } else {
       if (video) {
         video.src = mediaSrc;
-        video.poster = item.poster || item.image || '';
+        video.poster = item.poster || item.image || 'SABCeR-06.png';
+        video.onerror = () => {
+          console.warn("Lightbox video failed, fallback to outro reel:", video.src);
+          video.onerror = null;
+          video.src = 'Tafsir_Symposium_Outro_9x16.mp4';
+          video.load();
+          video.play().catch(() => {});
+        };
         video.style.display = 'block';
         video.load();
         video.play().catch(() => {});
@@ -1071,6 +1219,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderSpeakers();
   renderSchedule();
   renderGallery();
+  renderPublicHomeVideos();
   initBrochureViewer();
   initLightboxTouchSwipe();
 
@@ -1093,5 +1242,6 @@ window.addEventListener('storage', (e) => {
   } else if (e.key === STORAGE_KEYS.GALLERY) {
     AppState.gallery = JSON.parse(e.newValue || '[]');
     renderGallery();
+    renderPublicHomeVideos();
   }
 });

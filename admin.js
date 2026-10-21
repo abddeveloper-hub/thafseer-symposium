@@ -1220,6 +1220,13 @@ function previewAdminMedia(src, title, desc, isVideo = false, videoSrc = '') {
     if (imgEl) imgEl.style.display = 'none';
     if (videoEl) {
       videoEl.src = videoSrc || src;
+      videoEl.onerror = () => {
+        console.warn("Admin preview video failed, fallback:", videoEl.src);
+        videoEl.onerror = null;
+        videoEl.src = 'Tafsir_Symposium_Outro_9x16.mp4';
+        videoEl.load();
+        videoEl.play().catch(() => {});
+      };
       videoEl.style.display = 'block';
       videoEl.load();
       videoEl.play().catch(() => {});

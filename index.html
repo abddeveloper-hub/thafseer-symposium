@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" href="element.png">
   
   <!-- Design System CSS -->
-  <link rel="stylesheet" href="styles.css?v=17">
+  <link rel="stylesheet" href="styles.css?v=18">
 </head>
 <body>
 
@@ -59,7 +59,7 @@
           <svg viewBox="0 0 24 24"><path d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11-4l2.03 2.71L16 11l4 5H8l3-4zM2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z"/></svg>
           Album
         </a>
-        <a href="#video" class="nav-link" data-view="video" onclick="navigateTo('video'); return false;">
+        <a href="#video" class="nav-link" data-section="video" onclick="navigateToSection('video'); return false;">
           <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
           Video
         </a>
@@ -117,7 +117,7 @@
         <a href="#album" class="mobile-link" data-view="album" onclick="navigateTo('album'); return false;">
           Album
         </a>
-        <a href="#video" class="mobile-link" data-view="video" onclick="navigateTo('video'); return false;">
+        <a href="#video" class="mobile-link" data-section="video" onclick="navigateToSection('video'); return false;">
           Video
         </a>
       </div>
@@ -475,6 +475,72 @@
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           MULTIMEDIA PRESENTATIONS & VIDEO REELS
+           ========================================== -->
+      <section class="section" id="section-video">
+        <a id="video" style="position: relative; top: -100px; display: block; visibility: hidden;"></a>
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+              Multimedia Presentations &amp; Video Reels
+            </span>
+            <h2>Symposium Video Highlights &amp; Recorded Sessions</h2>
+            <p>Watch official introductory reels, keynote addresses, and live video documentation from Tafsir Symposium 2026.</p>
+          </div>
+
+          <!-- Featured Showcase Player -->
+          <div class="video-showcase-card">
+            <img src="element.png" alt="" class="video-corner-motif" aria-hidden="true">
+            <div class="vertical-video-wrapper">
+              <video id="home-symposium-teaser-video" controls preload="metadata" poster="SABCeR-06.png" playsinline>
+                <source src="Tafsir_Symposium_Outro_9x16.mp4" type="video/mp4">
+                Your browser does not support HTML5 video.
+              </video>
+              <iframe id="home-symposium-youtube-iframe" style="display:none; width:100%; height:100%; border:none; border-radius:inherit;" allowfullscreen></iframe>
+            </div>
+            <div class="video-info-panel">
+              <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                <span class="theme-tag" id="home-video-active-tag">Official Teaser</span>
+                <span class="album-cat-badge" style="background: rgba(13, 158, 117, 0.15); color: var(--primary-emerald); padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 700;">VIDEOS 🎬</span>
+              </div>
+              <h3 id="home-video-active-title">Tafsir Symposium 2026 • Outro &amp; Call for Papers</h3>
+              <p id="home-video-active-desc">
+                An international platform linking classical Quranic exegesis with contemporary epistemological inquiries. Organized by Ma'din Academy and SABCeR Research Council.
+              </p>
+              <div class="video-action-btns">
+                <button class="btn-emerald" id="btn-play-featured-video" onclick="playHomeFeaturedVideo()">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                  Play Presentation
+                </button>
+                <button class="btn-petrol" onclick="navigateTo('album'); filterGallery('Videos');">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+                  Browse Video Album
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video Reels Carousel / Strip -->
+          <div class="home-video-reels-wrap" style="margin-top: 2rem;">
+            <div class="home-reels-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+              <h4 style="font-size: 1.1rem; color: var(--primary-petrol); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+                Symposium Video Gallery &amp; Recorded Sessions
+              </h4>
+              <button class="btn-pill-subtle" onclick="navigateTo('album'); filterGallery('Videos');">
+                View All in Media Album &rarr;
+              </button>
+            </div>
+            <div class="home-video-reels-grid" id="home-video-reels-container">
+              <!-- Populated dynamically by app.js -->
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -889,8 +955,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
-  <script src="firebase-config.js?v=17"></script>
-  <script src="data.js?v=17"></script>
-  <script src="app.js?v=17"></script>
+  <script src="firebase-config.js?v=18"></script>
+  <script src="data.js?v=18"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>

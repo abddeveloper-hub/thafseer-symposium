@@ -3520,3 +3520,115 @@ textarea.form-control {
   border-color: rgba(14, 84, 99, 0.3);
 }
 
+/* ==========================================================================
+   PUBLIC PAGE VIDEO REELS STRIP COMPONENT
+   ========================================================================== */
+.home-video-reels-wrap {
+  background: var(--surface-card);
+  border: 1px solid var(--subtle-divider);
+  border-radius: var(--radius-xl);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.home-video-reels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.home-video-reel-card {
+  position: relative;
+  background: var(--surface-base);
+  border: 1px solid var(--subtle-divider);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-video-reel-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(13, 158, 117, 0.45);
+}
+
+.home-video-reel-thumb-wrap {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #0b1512;
+  overflow: hidden;
+}
+
+.home-video-reel-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.home-video-reel-card:hover .home-video-reel-thumb {
+  transform: scale(1.05);
+}
+
+.home-video-reel-play-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  background: rgba(13, 158, 117, 0.9);
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.home-video-reel-card:hover .home-video-reel-play-btn {
+  transform: translate(-50%, -50%) scale(1.12);
+  background: var(--primary-emerald);
+}
+
+.home-video-reel-info {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-grow: 1;
+}
+
+.home-video-reel-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-petrol);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.home-video-reel-meta {
+  font-size: 0.78rem;
+  color: var(--neutral-mid);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--subtle-divider);
+}
+
+@media (max-width: 640px) {
+  .home-video-reels-grid {
+    grid-template-columns: 1fr;
+  }
+  .home-video-reels-wrap {
+    padding: 1.25rem;
+  }
+}
+
+
