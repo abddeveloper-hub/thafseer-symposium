@@ -770,108 +770,46 @@ document.addEventListener('click', (e) => {
 });
 
 // ==========================================
-// INTERACTIVE BROCHURE PDF VIEWER
+// INTERACTIVE BROCHURE VIEWER
 // ==========================================
 
-let brochurePdfDoc = null;
 let brochureCurrentPage = 1;
-let brochureTotalPages = 1;
-let brochureIsRendering = false;
-let brochurePageNumPending = null;
+const brochureTotalPages = 12;
 
 function initBrochureViewer() {
-  const canvas = document.getElementById('brochure-canvas');
-  const container = document.querySelector('.brochure-canvas-wrap');
-  if (!canvas || !container) return;
+  renderBrochurePage(brochureCurrentPage);
 
-  const pdfUrl = 'Brochure_TS.pdf';
+  // Touch Swipe Support for Mobile
+  const imgWrap = document.querySelector('.brochure-image-wrap');
+  if (imgWrap) {
+    let touchStartX = 0;
+    let touchEndX = 0;
 
-  if (typeof pdfjsLib === 'undefined') {
-    renderFallbackPdfEmbed(container, pdfUrl);
-    return;
+    imgWrap.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    imgWrap.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      if (touchStartX - touchEndX > 50) {
+        nextBrochurePage(); // Swipe Left -> Next Page
+      } else if (touchEndX - touchStartX > 50) {
+        prevBrochurePage(); // Swipe Right -> Prev Page
+      }
+    }, { passive: true });
   }
-
-  try {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-    pdfjsLib.getDocument(encodeURI(pdfUrl)).promise.then(pdfDoc_ => {
-      brochurePdfDoc = pdfDoc_;
-      brochureTotalPages = pdfDoc_.numPages;
-
-      const pageIndicator = document.getElementById('brochure-page-num');
-      if (pageIndicator) pageIndicator.textContent = `Page ${brochureCurrentPage} / ${brochureTotalPages}`;
-
-      const loadingOverlay = document.getElementById('brochure-loading');
-      if (loadingOverlay) loadingOverlay.style.display = 'none';
-
-      renderBrochurePage(brochureCurrentPage);
-    }).catch(err => {
-      console.warn("PDF.js render fallback to native embed:", err);
-      renderFallbackPdfEmbed(container, pdfUrl);
-    });
-  } catch (err) {
-    console.warn("PDF.js init exception fallback to native embed:", err);
-    renderFallbackPdfEmbed(container, pdfUrl);
-  }
-}
-
-function renderFallbackPdfEmbed(container, pdfUrl) {
-  const loadingOverlay = document.getElementById('brochure-loading');
-  if (loadingOverlay) loadingOverlay.style.display = 'none';
-
-  const navBar = document.querySelector('.brochure-page-nav');
-  if (navBar) navBar.style.display = 'none';
-
-  container.innerHTML = `
-    <object data="${pdfUrl}" type="application/pdf" width="100%" height="620px" style="border-radius: var(--radius-md); border: none;">
-      <iframe src="${pdfUrl}#toolbar=0" width="100%" height="620px" style="border-radius: var(--radius-md); border: none;">
-        <p style="padding: 2rem; text-align: center; color: var(--neutral-dark);">
-          Your browser does not support inline PDF previews.
-          <a href="${pdfUrl}" download class="btn-emerald" style="margin-top: 1rem; display: inline-flex;">Download Brochure PDF</a>
-        </p>
-      </iframe>
-    </object>
-  `;
 }
 
 function renderBrochurePage(num) {
-  if (!brochurePdfDoc) return;
-  brochureIsRendering = true;
+  if (num < 1) num = 1;
+  if (num > brochureTotalPages) num = brochureTotalPages;
+  brochureCurrentPage = num;
 
-  brochurePdfDoc.getPage(num).then(page => {
-    const canvas = document.getElementById('brochure-canvas');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const container = canvas.parentElement || document.querySelector('.brochure-viewport');
-    const containerWidth = container ? container.clientWidth : 800;
-
-    const unscaledViewport = page.getViewport({ scale: 1 });
-    const targetWidth = Math.max(containerWidth - 24, 280);
-    const scale = targetWidth / unscaledViewport.width;
-    const viewport = page.getViewport({ scale: scale });
-
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
-
-    const renderContext = {
-      canvasContext: ctx,
-      viewport: viewport
-    };
-
-    const renderTask = page.render(renderContext);
-
-    renderTask.promise.then(() => {
-      brochureIsRendering = false;
-      const loadingOverlay = document.getElementById('brochure-loading');
-      if (loadingOverlay) loadingOverlay.style.display = 'none';
-
-      if (brochurePageNumPending !== null) {
-        renderBrochurePage(brochurePageNumPending);
-        brochurePageNumPending = null;
-      }
-    });
-  });
+  const imgEl = document.getElementById('brochure-page-img');
+  if (imgEl) {
+    imgEl.src = `assets/images/brochure/page_${num}.jpg`;
+    imgEl.alt = `Symposium Brochure Page ${num}`;
+  }
 
   const pageIndicator = document.getElementById('brochure-page-num');
   if (pageIndicator) pageIndicator.textContent = `Page ${num} / ${brochureTotalPages}`;
@@ -880,6 +818,31 @@ function renderBrochurePage(num) {
   const nextBtn = document.getElementById('btn-brochure-next');
   if (prevBtn) prevBtn.disabled = (num <= 1);
   if (nextBtn) nextBtn.disabled = (num >= brochureTotalPages);
+}
+
+function prevBrochurePage() {
+  if (brochureCurrentPage <= 1) return;
+  renderBrochurePage(brochureCurrentPage - 1);
+}
+
+function nextBrochurePage() {
+  if (brochureCurrentPage >= brochureTotalPages) return;
+  renderBrochurePage(brochureCurrentPage + 1);
+}
+
+function openBrochureFullScreen() {
+  openModal('lightbox-modal');
+  const img = document.getElementById('lightbox-img');
+  const title = document.getElementById('lightbox-title');
+  const desc = document.getElementById('lightbox-desc');
+  const category = document.getElementById('lightbox-category');
+  const counter = document.getElementById('lightbox-counter');
+
+  if (img) img.src = `assets/images/brochure/page_${brochureCurrentPage}.jpg`;
+  if (title) title.textContent = `Official Symposium Brochure • Page ${brochureCurrentPage} of ${brochureTotalPages}`;
+  if (desc) desc.textContent = "High-resolution brochure page. Click download button below for full PDF document.";
+  if (category) category.textContent = "Brochure Publication";
+  if (counter) counter.textContent = `${brochureCurrentPage} / ${brochureTotalPages}`;
 }
 
 function prevBrochurePage() {
