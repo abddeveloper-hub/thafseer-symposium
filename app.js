@@ -781,35 +781,57 @@ let brochurePageNumPending = null;
 
 function initBrochureViewer() {
   const canvas = document.getElementById('brochure-canvas');
-  if (!canvas) return;
+  const container = document.querySelector('.brochure-canvas-wrap');
+  if (!canvas || !container) return;
 
-  const pdfUrl = 'Brochure TS.pdf';
+  const pdfUrl = 'Brochure_TS.pdf';
 
   if (typeof pdfjsLib === 'undefined') {
-    console.warn("PDF.js library not loaded.");
+    renderFallbackPdfEmbed(container, pdfUrl);
     return;
   }
 
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  try {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-  pdfjsLib.getDocument(pdfUrl).promise.then(pdfDoc_ => {
-    brochurePdfDoc = pdfDoc_;
-    brochureTotalPages = pdfDoc_.numPages;
+    pdfjsLib.getDocument(encodeURI(pdfUrl)).promise.then(pdfDoc_ => {
+      brochurePdfDoc = pdfDoc_;
+      brochureTotalPages = pdfDoc_.numPages;
 
-    const pageIndicator = document.getElementById('brochure-page-num');
-    if (pageIndicator) pageIndicator.textContent = `Page ${brochureCurrentPage} / ${brochureTotalPages}`;
+      const pageIndicator = document.getElementById('brochure-page-num');
+      if (pageIndicator) pageIndicator.textContent = `Page ${brochureCurrentPage} / ${brochureTotalPages}`;
 
-    const loadingOverlay = document.getElementById('brochure-loading');
-    if (loadingOverlay) loadingOverlay.style.display = 'none';
+      const loadingOverlay = document.getElementById('brochure-loading');
+      if (loadingOverlay) loadingOverlay.style.display = 'none';
 
-    renderBrochurePage(brochureCurrentPage);
-  }).catch(err => {
-    console.warn("Brochure PDF load error:", err);
-    const loadingOverlay = document.getElementById('brochure-loading');
-    if (loadingOverlay) {
-      loadingOverlay.innerHTML = `<span style="color: var(--neutral-dark-muted); font-size: 0.9rem;">Interactive preview ready. Use the download button below to view the brochure.</span>`;
-    }
-  });
+      renderBrochurePage(brochureCurrentPage);
+    }).catch(err => {
+      console.warn("PDF.js render fallback to native embed:", err);
+      renderFallbackPdfEmbed(container, pdfUrl);
+    });
+  } catch (err) {
+    console.warn("PDF.js init exception fallback to native embed:", err);
+    renderFallbackPdfEmbed(container, pdfUrl);
+  }
+}
+
+function renderFallbackPdfEmbed(container, pdfUrl) {
+  const loadingOverlay = document.getElementById('brochure-loading');
+  if (loadingOverlay) loadingOverlay.style.display = 'none';
+
+  const navBar = document.querySelector('.brochure-page-nav');
+  if (navBar) navBar.style.display = 'none';
+
+  container.innerHTML = `
+    <object data="${pdfUrl}" type="application/pdf" width="100%" height="620px" style="border-radius: var(--radius-md); border: none;">
+      <iframe src="${pdfUrl}#toolbar=0" width="100%" height="620px" style="border-radius: var(--radius-md); border: none;">
+        <p style="padding: 2rem; text-align: center; color: var(--neutral-dark);">
+          Your browser does not support inline PDF previews.
+          <a href="${pdfUrl}" download class="btn-emerald" style="margin-top: 1rem; display: inline-flex;">Download Brochure PDF</a>
+        </p>
+      </iframe>
+    </object>
+  `;
 }
 
 function renderBrochurePage(num) {
@@ -821,11 +843,13 @@ function renderBrochurePage(num) {
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    const containerWidth = canvas.parentElement ? canvas.parentElement.clientWidth : 800;
+    const container = canvas.parentElement || document.querySelector('.brochure-viewport');
+    const containerWidth = container ? container.clientWidth : 800;
 
     const unscaledViewport = page.getViewport({ scale: 1 });
-    const scale = Math.min((containerWidth - 20) / unscaledViewport.width, 2.0);
-    const viewport = page.getViewport({ scale: scale > 0.5 ? scale : 1.0 });
+    const targetWidth = Math.max(containerWidth - 24, 280);
+    const scale = targetWidth / unscaledViewport.width;
+    const viewport = page.getViewport({ scale: scale });
 
     canvas.height = viewport.height;
     canvas.width = viewport.width;
@@ -839,6 +863,9 @@ function renderBrochurePage(num) {
 
     renderTask.promise.then(() => {
       brochureIsRendering = false;
+      const loadingOverlay = document.getElementById('brochure-loading');
+      if (loadingOverlay) loadingOverlay.style.display = 'none';
+
       if (brochurePageNumPending !== null) {
         renderBrochurePage(brochurePageNumPending);
         brochurePageNumPending = null;

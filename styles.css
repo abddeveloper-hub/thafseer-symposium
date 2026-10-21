@@ -2364,22 +2364,22 @@ textarea.form-control {
 
 .brochure-corner-motif {
   position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 180px;
-  height: 180px;
-  opacity: 0.08;
+  top: -20px;
+  right: -20px;
+  width: 120px;
+  height: 120px;
+  opacity: 0.05;
   pointer-events: none;
+  z-index: 1;
 }
 
 .brochure-viewport {
   width: 100%;
   max-width: 850px;
-  min-height: 480px;
   background: var(--surface-muted);
   border-radius: var(--radius-lg);
   border: 1px solid var(--subtle-divider);
-  padding: 1rem;
+  padding: 1.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2388,7 +2388,7 @@ textarea.form-control {
 
 .brochure-canvas-wrap {
   position: relative;
-  max-width: 100%;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2405,7 +2405,7 @@ textarea.form-control {
 .brochure-loading-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(244, 248, 247, 0.9);
+  background: rgba(244, 248, 247, 0.95);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2418,6 +2418,44 @@ textarea.form-control {
 .brochure-loading-overlay span {
   font-size: 0.9rem;
   font-weight: 600;
+  color: var(--neutral-dark-muted);
+}
+
+.brochure-controls-bar {
+  width: 100%;
+  max-width: 850px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  border-top: 1px solid var(--subtle-divider);
+}
+
+@media (max-width: 600px) {
+  .brochure-controls-bar {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .brochure-page-nav {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .brochure-action-btns {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .brochure-action-btns .btn-emerald {
+    width: 100%;
+    justify-content: center;
+  }
+}
   color: var(--neutral-dark-muted);
 }
 
