@@ -2824,92 +2824,27 @@ textarea.form-control {
   box-shadow: 0 16px 40px rgba(14, 84, 99, 0.24);
 }
 
-.terraq-map-canvas {
+.terraq-image-container {
   position: relative;
   width: 100%;
-  height: 380px;
-  background: radial-gradient(circle at 50% 50%, #0d383e 0%, #06191c 100%);
+  aspect-ratio: 16 / 9.5;
+  background: #082528;
   overflow: hidden;
-}
-
-.terraq-grid-lines {
-  position: absolute;
-  inset: 0;
-  background-image: 
-    linear-gradient(rgba(13, 158, 117, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(13, 158, 117, 0.08) 1px, transparent 1px);
-  background-size: 30px 30px;
-  pointer-events: none;
-}
-
-/* Pulsating Coordinate Pins */
-.terraq-map-pin {
-  position: absolute;
-  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  z-index: 3;
+  justify-content: center;
 }
 
-.pin-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #39b9b8;
-  border: 2px solid #ffffff;
-  box-shadow: 0 0 10px #39b9b8;
+.terraq-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
 }
 
-.pin-pulse {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: rgba(57, 185, 184, 0.6);
-  animation: pinPulse 2.2s infinite;
-}
-
-@keyframes pinPulse {
-  0% { transform: scale(1); opacity: 0.8; }
-  100% { transform: scale(3.5); opacity: 0; }
-}
-
-.pin-label {
-  background: rgba(7, 36, 38, 0.88);
-  backdrop-filter: blur(4px);
-  color: #ffffff;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 0.2rem 0.55rem;
-  border-radius: var(--radius-full);
-  border: 1px solid rgba(57, 185, 184, 0.3);
-  white-space: nowrap;
-}
-
-.pin-ar {
-  font-family: var(--font-arabic, 'Amiri', serif);
-  color: #39b9b8;
-  margin-left: 0.2rem;
-}
-
-/* Pin Specific Highlights */
-.pin-makkah .pin-dot {
-  background: #e6b800;
-  box-shadow: 0 0 14px #e6b800;
-  width: 12px;
-  height: 12px;
-}
-.pin-makkah .pin-pulse {
-  background: rgba(230, 184, 0, 0.6);
-  width: 12px;
-  height: 12px;
-}
-.pin-makkah .pin-label {
-  border-color: rgba(230, 184, 0, 0.5);
-  font-weight: 800;
+.terraq-map-preview-wrap:hover .terraq-preview-img {
+  transform: scale(1.03);
 }
 
 .terraq-badge-count {
@@ -3272,8 +3207,8 @@ textarea.form-control {
   .terraq-showcase-card {
     padding: 1.25rem 0.85rem;
   }
-  .terraq-map-canvas {
-    height: 300px;
+  .terraq-image-container {
+    aspect-ratio: 16 / 10;
   }
   .terraq-features-grid {
     grid-template-columns: 1fr;
