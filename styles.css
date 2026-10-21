@@ -2416,33 +2416,88 @@ textarea.form-control {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1.25rem;
   flex-wrap: wrap;
   padding-top: 1rem;
   border-top: 1px solid var(--subtle-divider);
 }
 
+.brochure-page-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  max-width: 480px;
+}
+
+.btn-brochure-nav {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.5rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  background: var(--surface-deep-petrol);
+  border: 1px solid var(--surface-deep-petrol);
+  border-radius: var(--radius-full);
+  box-shadow: 0 4px 12px rgba(14, 84, 99, 0.25);
+  transition: var(--transition-fast);
+  cursor: pointer;
+}
+
+.btn-brochure-nav.btn-next {
+  background: var(--primary-emerald);
+  border-color: var(--primary-emerald);
+  box-shadow: 0 4px 14px rgba(13, 158, 117, 0.35);
+}
+
+.btn-brochure-nav.btn-next:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(13, 158, 117, 0.45);
+}
+
+.btn-brochure-nav.btn-prev:hover:not(:disabled) {
+  background: var(--neutral-dark);
+  transform: translateY(-2px);
+}
+
+.btn-brochure-nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 @media (max-width: 600px) {
   .brochure-controls-bar {
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    gap: 1rem;
   }
 
   .brochure-page-nav {
     width: 100%;
-    justify-content: center;
+    max-width: 100%;
+  }
+
+  .btn-brochure-nav {
+    padding: 0.85rem 1rem;
+    font-size: 0.98rem;
   }
 
   .brochure-action-btns {
     width: 100%;
-    display: flex;
-    justify-content: center;
   }
 
   .brochure-action-btns .btn-emerald {
     width: 100%;
     justify-content: center;
+  }
+}
   }
 }
   color: var(--neutral-dark-muted);

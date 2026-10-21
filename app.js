@@ -779,7 +779,7 @@ const brochureTotalPages = 12;
 function initBrochureViewer() {
   renderBrochurePage(brochureCurrentPage);
 
-  // Touch Swipe Support for Mobile
+  // Touch Swipe & Tap Navigation Support
   const imgWrap = document.querySelector('.brochure-image-wrap');
   if (imgWrap) {
     let touchStartX = 0;
@@ -791,12 +791,23 @@ function initBrochureViewer() {
 
     imgWrap.addEventListener('touchend', (e) => {
       touchEndX = e.changedTouches[0].screenX;
-      if (touchStartX - touchEndX > 50) {
+      const diff = touchStartX - touchEndX;
+      if (diff > 40) {
         nextBrochurePage(); // Swipe Left -> Next Page
-      } else if (touchEndX - touchStartX > 50) {
+      } else if (diff < -40) {
         prevBrochurePage(); // Swipe Right -> Prev Page
       }
     }, { passive: true });
+
+    imgWrap.addEventListener('click', (e) => {
+      const rect = imgWrap.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      if (clickX > rect.width * 0.5) {
+        nextBrochurePage();
+      } else {
+        prevBrochurePage();
+      }
+    });
   }
 }
 
@@ -810,9 +821,6 @@ function renderBrochurePage(num) {
     imgEl.src = `assets/images/brochure/page_${num}.jpg`;
     imgEl.alt = `Symposium Brochure Page ${num}`;
   }
-
-  const pageIndicator = document.getElementById('brochure-page-num');
-  if (pageIndicator) pageIndicator.textContent = `Page ${num} / ${brochureTotalPages}`;
 
   const prevBtn = document.getElementById('btn-brochure-prev');
   const nextBtn = document.getElementById('btn-brochure-next');
