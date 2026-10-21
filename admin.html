@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" href="element.png">
   
   <!-- Design System CSS -->
-  <link rel="stylesheet" href="styles.css?v=16">
+  <link rel="stylesheet" href="styles.css?v=17">
   
   <style>
     /* Admin Specific Polished Accents */
@@ -462,39 +462,101 @@
             <h4>Upload New Media Asset to Public Album</h4>
             <span class="theme-tag">Interactive Drag &amp; Drop Preview</span>
           </div>
+          <!-- Media Type Selector Switcher -->
+          <div class="media-type-selector">
+            <button type="button" class="media-type-btn active" id="gallery-type-btn-photo" onclick="setGalleryMediaType('photo')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              Photograph / Image
+            </button>
+            <button type="button" class="media-type-btn" id="gallery-type-btn-video" onclick="setGalleryMediaType('video')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Video Reel / Clip 🎬
+            </button>
+          </div>
+
           <form onsubmit="handleAddGalleryItem(event)">
+            <input type="hidden" name="mediaType" id="gallery-media-type" value="photo">
             
-            <!-- Drag and drop zone -->
-            <div class="dropzone" id="gallery-dropzone">
-              <input type="file" id="gallery-file-input" accept="image/*" style="display: none;">
-              <div class="dropzone-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="17 8 12 3 7 8"></polyline>
-                  <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
+            <!-- Photo Upload Area -->
+            <div id="gallery-photo-upload-group">
+              <div class="dropzone" id="gallery-dropzone">
+                <input type="file" id="gallery-file-input" accept="image/*" style="display: none;">
+                <div class="dropzone-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                </div>
+                <h5>Drag &amp; drop event photograph here, or click to browse</h5>
+                <p>Supports High-Definition PNG, JPG, or WEBP up to 10MB</p>
               </div>
-              <h5>Drag &amp; drop event photograph here, or click to browse</h5>
-              <p>Supports High-Definition PNG, JPG, or WEBP up to 10MB</p>
+
+              <!-- Live Preview Box -->
+              <div id="gallery-preview-box" class="upload-preview-box" style="display: none;">
+                <img id="gallery-preview-img" src="" alt="Upload Preview" class="preview-thumb">
+                <div>
+                  <strong style="color: var(--primary-emerald); font-size: 0.88rem;">Image Selected</strong>
+                  <p style="font-size: 0.78rem; color: var(--neutral-mid);">Ready for publishing with your details below</p>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top: 1.25rem;">
+                <label class="form-label">Direct Image URL (Alternative to file upload)</label>
+                <input type="text" name="imageUrl" id="gallery-image-url-input" class="form-control" placeholder="assets/images/... or https://...">
+              </div>
             </div>
 
-            <!-- Live Preview Box -->
-            <div id="gallery-preview-box" class="upload-preview-box" style="display: none;">
-              <img id="gallery-preview-img" src="" alt="Upload Preview" class="preview-thumb">
-              <div>
-                <strong style="color: var(--primary-emerald); font-size: 0.88rem;">Image Selected</strong>
-                <p style="font-size: 0.78rem; color: var(--neutral-mid);">Ready for publishing with your details below</p>
+            <!-- Video Upload Area -->
+            <div id="gallery-video-upload-group" style="display: none;">
+              <div class="dropzone" id="gallery-video-dropzone" onclick="document.getElementById('gallery-video-file-input').click()">
+                <input type="file" id="gallery-video-file-input" accept="video/mp4,video/webm,video/ogg,video/quicktime" style="display: none;">
+                <div class="dropzone-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0D9E75" stroke-width="1.8">
+                    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                    <line x1="7" y1="2" x2="7" y2="22"></line>
+                    <line x1="17" y1="2" x2="17" y2="22"></line>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <line x1="2" y1="7" x2="7" y2="7"></line>
+                    <line x1="2" y1="17" x2="7" y2="17"></line>
+                    <line x1="17" y1="17" x2="22" y2="17"></line>
+                    <line x1="17" y1="7" x2="22" y2="7"></line>
+                  </svg>
+                </div>
+                <h5 id="gallery-video-filename">Drag &amp; drop video reel (.MP4 / WebM) here, or click to browse</h5>
+                <p>Supports MP4, WebM up to 50MB (e.g. 9:16 reels, plenary recordings)</p>
+              </div>
+
+              <!-- Video Preview Box -->
+              <div id="gallery-video-preview-box" class="upload-preview-box" style="display: none; flex-direction: column; align-items: flex-start; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                  <strong style="color: var(--primary-emerald); font-size: 0.88rem;">Video Loaded</strong>
+                  <button type="button" class="btn-pill-subtle" onclick="clearSelectedVideo()" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">Clear Video</button>
+                </div>
+                <video id="gallery-video-preview-player" controls playsinline style="max-height: 220px; width: 100%; border-radius: var(--radius-md); background: #000;"></video>
+              </div>
+
+              <div class="form-grid-2" style="margin-top: 1.25rem;">
+                <div class="form-group">
+                  <label class="form-label">Video File Path or Direct URL / YouTube Link</label>
+                  <input type="text" name="videoUrl" id="gallery-video-url-input" class="form-control" placeholder="e.g. Tafsir_Symposium_Outro_9x16.mp4 or YouTube link">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Video Poster / Thumbnail Image URL</label>
+                  <input type="text" name="posterUrl" id="gallery-poster-url-input" class="form-control" placeholder="Optional thumbnail (defaults to SABCeR-06.png)">
+                </div>
               </div>
             </div>
 
             <div class="form-grid-2" style="margin-top: 1.5rem;">
               <div class="form-group">
-                <label class="form-label">Image Title / Caption</label>
-                <input type="text" name="title" class="form-control" placeholder="e.g. Bilateral Academic MoU Signing with International Delegates" required>
+                <label class="form-label">Media Title / Caption</label>
+                <input type="text" name="title" class="form-control" placeholder="e.g. Official Curtain Raiser Reel / Inaugural Ceremony" required>
               </div>
               <div class="form-group">
                 <label class="form-label">Album Category Tag</label>
-                <select name="category" class="form-control" required>
+                <select name="category" id="gallery-form-category" class="form-control" required>
+                  <option value="Videos">Videos 🎬</option>
                   <option value="Inauguration">Inauguration</option>
                   <option value="Paper Presentations">Paper Presentations</option>
                   <option value="Scholarly Panels">Scholarly Panels</option>
@@ -504,13 +566,8 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Direct Image URL (Alternative to file upload)</label>
-              <input type="text" name="imageUrl" class="form-control" placeholder="assets/images/... or https://...">
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Caption Description</label>
-              <textarea name="description" class="form-control" placeholder="Contextual notes on scholars, paper titles, and proceedings..."></textarea>
+              <label class="form-label">Caption Description / Notes</label>
+              <textarea name="description" class="form-control" placeholder="Contextual notes on video content, scholars, and symposium highlights..."></textarea>
             </div>
 
             <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
@@ -531,6 +588,7 @@
             <div style="min-width: 180px;">
               <select id="admin-gallery-filter" class="form-control" onchange="renderAdminGalleryTable()">
                 <option value="All">All Categories</option>
+                <option value="Videos">Videos 🎬</option>
                 <option value="Inauguration">Inauguration</option>
                 <option value="Paper Presentations">Paper Presentations</option>
                 <option value="Scholarly Panels">Scholarly Panels</option>
@@ -934,12 +992,18 @@
             <div class="form-group">
               <label class="form-label">Album Category Tag</label>
               <select name="category" id="edit-gallery-category" class="form-control" required>
+                <option value="Videos">Videos 🎬</option>
                 <option value="Inauguration">Inauguration</option>
                 <option value="Paper Presentations">Paper Presentations</option>
                 <option value="Scholarly Panels">Scholarly Panels</option>
                 <option value="Posters & Exhibits">Posters &amp; Exhibits</option>
               </select>
             </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Video URL / File (if video reel)</label>
+            <input type="text" name="videoUrl" id="edit-gallery-video-url" class="form-control" placeholder="e.g. Tafsir_Symposium_Outro_9x16.mp4 or YouTube link">
           </div>
 
           <div class="form-group">
@@ -975,6 +1039,7 @@
       </div>
       <div style="text-align: center; background: #000; border-radius: var(--radius-md); overflow: hidden; max-height: 65vh; display: flex; align-items: center; justify-content: center;">
         <img id="admin-preview-modal-img" src="" alt="Album Preview" style="max-width: 100%; max-height: 65vh; object-fit: contain;">
+        <video id="admin-preview-modal-video" controls playsinline style="display: none; max-width: 100%; max-height: 65vh; width: 100%;"></video>
       </div>
       <p id="admin-preview-modal-desc" style="font-size: 0.88rem; color: var(--neutral-dark-muted); margin-top: 1rem; line-height: 1.5; text-align: left;"></p>
     </div>
@@ -988,8 +1053,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
-  <script src="firebase-config.js?v=16"></script>
-  <script src="data.js?v=16"></script>
-  <script src="admin.js?v=16"></script>
+  <script src="firebase-config.js?v=17"></script>
+  <script src="data.js?v=17"></script>
+  <script src="admin.js?v=17"></script>
 </body>
 </html>

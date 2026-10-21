@@ -39,9 +39,13 @@ function initStorage() {
   }
   const currentGalleryRaw = localStorage.getItem(STORAGE_KEYS.GALLERY);
   const savedGallery = JSON.parse(currentGalleryRaw || '[]');
-  if (!currentGalleryRaw || savedGallery.length === 0) {
-    localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(typeof INITIAL_GALLERY !== 'undefined' ? INITIAL_GALLERY : []));
+  let galleryData = (savedGallery && savedGallery.length > 0) ? savedGallery : ((typeof INITIAL_GALLERY !== 'undefined' && INITIAL_GALLERY.length > 0) ? INITIAL_GALLERY : []);
+  const hasVideo = galleryData.some(g => g.type === 'video' || g.category === 'Videos' || (g.videoUrl && g.videoUrl.trim() !== ''));
+  if (!hasVideo && typeof INITIAL_GALLERY !== 'undefined' && INITIAL_GALLERY[0] && INITIAL_GALLERY[0].type === 'video') {
+    galleryData.unshift(INITIAL_GALLERY[0]);
   }
+  AppState.gallery = galleryData;
+  try { localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AppState.gallery)); } catch (e) {}
   const currentRegRaw = localStorage.getItem(STORAGE_KEYS.REGISTRATIONS);
   if (!currentRegRaw || currentRegRaw === '[]') {
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(INITIAL_REGISTRATIONS));
@@ -582,28 +586,60 @@ function renderGallery() {
 
   container.innerHTML = filtered.map((item) => {
     const globalIndex = AppState.gallery.findIndex(g => g.id === item.id);
+    const isVideo = item.type === 'video' || item.category === 'Videos' || (item.videoUrl && item.videoUrl.trim() !== '');
+    const thumbSrc = item.poster || item.image || 'element.png';
+
     return `
-      <div class="album-photo-item" onclick="openLightbox(${globalIndex})" role="button" tabindex="0" title="${item.title} — Tap to view details">
-        <img src="${item.image}" alt="${item.title}" class="album-photo-img" loading="lazy" onerror="this.onerror=null; this.src='element.png';">
+      <div class="album-photo-item ${isVideo ? 'album-video-tile' : ''}" onclick="openLightbox(${globalIndex})" role="button" tabindex="0" title="${item.title} — Tap to view details">
+        <img src="${thumbSrc}" alt="${item.title}" class="album-photo-img" loading="lazy" onerror="this.onerror=null; this.src='element.png';">
+        
+        ${isVideo ? `
+          <div class="album-video-play-overlay">
+            <div class="video-play-circle" title="Play Video">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="6 4 20 12 6 20 6 4"></polygon>
+              </svg>
+            </div>
+          </div>
+          <div class="video-pill-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+            <span>VIDEO</span>
+          </div>
+        ` : ''}
+
         <div class="album-photo-scrim">
           <div class="album-photo-overlay-top">
-            <span class="album-photo-tag">${item.category || 'Symposium Archive'}</span>
+            <span class="album-photo-tag">${item.category || (isVideo ? 'Videos' : 'Symposium Archive')}</span>
           </div>
           <div class="album-photo-overlay-bottom">
             <span class="album-photo-view-hint">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                <line x1="11" y1="8" x2="11" y2="14"></line>
-                <line x1="8" y1="11" x2="14" y2="11"></line>
-              </svg>
-              Tap to view details
+              ${isVideo ? `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+                Tap to play video
+              ` : `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  <line x1="11" y1="8" x2="11" y2="14"></line>
+                  <line x1="8" y1="11" x2="14" y2="11"></line>
+                </svg>
+                Tap to view details
+              `}
             </span>
           </div>
         </div>
       </div>
     `;
   }).join('');
+}
+
+function getYouTubeEmbedUrl(url) {
+  if (!url) return '';
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\w-]{11})/);
+  if (ytMatch) {
+    return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0`;
+  }
+  return '';
 }
 
 let isBrochureLightbox = false;
@@ -616,20 +652,58 @@ function openLightbox(index) {
   const item = AppState.gallery[index];
   const modal = document.getElementById('lightbox-modal');
   const img = document.getElementById('lightbox-img');
+  const video = document.getElementById('lightbox-video');
+  const iframe = document.getElementById('lightbox-iframe');
   const title = document.getElementById('lightbox-title');
   const category = document.getElementById('lightbox-category');
   const desc = document.getElementById('lightbox-desc');
   const counter = document.getElementById('lightbox-counter');
   const timestamp = document.getElementById('lightbox-timestamp');
 
-  if (img) {
-    img.src = item.image;
-    img.alt = item.title;
+  // Pause previous video playback
+  if (video) {
+    video.pause();
+    video.src = '';
+    video.style.display = 'none';
   }
+  if (iframe) {
+    iframe.src = '';
+    iframe.style.display = 'none';
+  }
+
+  const isVideo = item.type === 'video' || item.category === 'Videos' || (item.videoUrl && item.videoUrl.trim() !== '');
+  const mediaSrc = item.videoUrl || item.image || '';
+
+  if (isVideo && mediaSrc) {
+    if (img) img.style.display = 'none';
+
+    const ytEmbed = getYouTubeEmbedUrl(mediaSrc);
+    if (ytEmbed) {
+      if (iframe) {
+        iframe.src = ytEmbed;
+        iframe.style.display = 'block';
+      }
+    } else {
+      if (video) {
+        video.src = mediaSrc;
+        video.poster = item.poster || item.image || '';
+        video.style.display = 'block';
+        video.load();
+        video.play().catch(() => {});
+      }
+    }
+  } else {
+    if (img) {
+      img.src = item.image;
+      img.alt = item.title;
+      img.style.display = 'block';
+    }
+  }
+
   if (title) title.textContent = item.title;
-  if (category) category.textContent = item.category || 'Symposium Archive';
+  if (category) category.textContent = item.category || (isVideo ? 'Videos' : 'Symposium Archive');
   if (desc) {
-    desc.textContent = item.description || 'Photographic archival record from Tafsir Symposium 2026.';
+    desc.textContent = item.description || (isVideo ? 'Official multimedia video presentation from Tafsir Symposium 2026.' : 'Photographic archival record from Tafsir Symposium 2026.');
   }
   if (counter) counter.textContent = `${index + 1} / ${AppState.gallery.length}`;
   if (timestamp) timestamp.textContent = item.timestamp || '';
@@ -772,6 +846,17 @@ function closeModal(modalId) {
   }
   if (modalId === 'lightbox-modal') {
     isBrochureLightbox = false;
+    const vid = document.getElementById('lightbox-video');
+    if (vid) {
+      vid.pause();
+      vid.src = '';
+      vid.style.display = 'none';
+    }
+    const ifr = document.getElementById('lightbox-iframe');
+    if (ifr) {
+      ifr.src = '';
+      ifr.style.display = 'none';
+    }
   }
 }
 

@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" href="element.png">
   
   <!-- Design System CSS -->
-  <link rel="stylesheet" href="styles.css?v=16">
+  <link rel="stylesheet" href="styles.css?v=17">
 </head>
 <body>
 
@@ -586,6 +586,7 @@
           <div class="album-header-bar">
             <div class="album-filter-pills">
               <button class="album-pill active" data-category="All" onclick="filterGallery('All')">All</button>
+              <button class="album-pill" data-category="Videos" onclick="filterGallery('Videos')">Videos 🎬</button>
               <button class="album-pill" data-category="Inauguration" onclick="filterGallery('Inauguration')">Inauguration</button>
               <button class="album-pill" data-category="Paper Presentations" onclick="filterGallery('Paper Presentations')">Paper Presentations</button>
               <button class="album-pill" data-category="Scholarly Panels" onclick="filterGallery('Scholarly Panels')">Scholarly Panels</button>
@@ -791,6 +792,8 @@
       <div class="lightbox-content-box">
         <div class="lightbox-img-frame">
           <img id="lightbox-img" src="" alt="Symposium Gallery Detail">
+          <video id="lightbox-video" class="lightbox-video-player" controls playsinline style="display: none;"></video>
+          <iframe id="lightbox-iframe" class="lightbox-video-iframe" style="display: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
           <button class="lightbox-nav-btn lightbox-prev" onclick="navigateLightbox(-1)" aria-label="Previous Image">
             &#10094;
           </button>
@@ -886,8 +889,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
-  <script src="firebase-config.js?v=16"></script>
-  <script src="data.js?v=16"></script>
-  <script src="app.js?v=16"></script>
+  <script src="firebase-config.js?v=17"></script>
+  <script src="data.js?v=17"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>

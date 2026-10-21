@@ -46,7 +46,12 @@ function initAdminStorage() {
   AdminState.schedule = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCHEDULE)) || [];
   AdminState.sessions = JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSIONS)) || [];
   const loadedGallery = JSON.parse(localStorage.getItem(STORAGE_KEYS.GALLERY)) || [];
-  AdminState.gallery = (loadedGallery && loadedGallery.length > 0) ? loadedGallery : ((typeof INITIAL_GALLERY !== 'undefined' && INITIAL_GALLERY.length > 0) ? INITIAL_GALLERY : []);
+  let adminGalleryData = (loadedGallery && loadedGallery.length > 0) ? loadedGallery : ((typeof INITIAL_GALLERY !== 'undefined' && INITIAL_GALLERY.length > 0) ? INITIAL_GALLERY : []);
+  const hasVideo = adminGalleryData.some(g => g.type === 'video' || g.category === 'Videos' || (g.videoUrl && g.videoUrl.trim() !== ''));
+  if (!hasVideo && typeof INITIAL_GALLERY !== 'undefined' && INITIAL_GALLERY[0] && INITIAL_GALLERY[0].type === 'video') {
+    adminGalleryData.unshift(INITIAL_GALLERY[0]);
+  }
+  AdminState.gallery = adminGalleryData;
   try { localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(AdminState.gallery)); } catch (e) {}
   AdminState.registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS)) || [];
 
@@ -870,64 +875,159 @@ let pendingGalleryImage = '';
 let pendingGalleryFileObj = null;
 let pendingEditGalleryImage = '';
 let pendingEditGalleryFileObj = null;
+let currentGalleryMediaType = 'photo';
+let pendingGalleryVideoFileObj = null;
+
+function setGalleryMediaType(type) {
+  currentGalleryMediaType = type;
+  const photoBtn = document.getElementById('gallery-type-btn-photo');
+  const videoBtn = document.getElementById('gallery-type-btn-video');
+  const photoGroup = document.getElementById('gallery-photo-upload-group');
+  const videoGroup = document.getElementById('gallery-video-upload-group');
+  const hiddenType = document.getElementById('gallery-media-type');
+  const catSelect = document.getElementById('gallery-form-category');
+
+  if (type === 'video') {
+    if (photoBtn) photoBtn.classList.remove('active');
+    if (videoBtn) videoBtn.classList.add('active');
+    if (photoGroup) photoGroup.style.display = 'none';
+    if (videoGroup) videoGroup.style.display = 'block';
+    if (hiddenType) hiddenType.value = 'video';
+    if (catSelect) catSelect.value = 'Videos';
+  } else {
+    if (photoBtn) photoBtn.classList.add('active');
+    if (videoBtn) videoBtn.classList.remove('active');
+    if (photoGroup) photoGroup.style.display = 'block';
+    if (videoGroup) videoGroup.style.display = 'none';
+    if (hiddenType) hiddenType.value = 'photo';
+    if (catSelect && catSelect.value === 'Videos') catSelect.value = 'Inauguration';
+  }
+}
+
+function clearSelectedVideo() {
+  pendingGalleryVideoFileObj = null;
+  const previewBox = document.getElementById('gallery-video-preview-box');
+  const previewPlayer = document.getElementById('gallery-video-preview-player');
+  const fileInput = document.getElementById('gallery-video-file-input');
+  const filenameEl = document.getElementById('gallery-video-filename');
+  const urlInput = document.getElementById('gallery-video-url-input');
+
+  if (previewPlayer) {
+    previewPlayer.pause();
+    previewPlayer.src = '';
+  }
+  if (previewBox) previewBox.style.display = 'none';
+  if (fileInput) fileInput.value = '';
+  if (filenameEl) filenameEl.textContent = 'Drag & drop video reel (.MP4 / WebM) here, or click to browse';
+  if (urlInput) urlInput.value = '';
+}
 
 function setupDropzone() {
+  // Photo Dropzone Setup
   const dropzone = document.getElementById('gallery-dropzone');
   const fileInput = document.getElementById('gallery-file-input');
   const previewBox = document.getElementById('gallery-preview-box');
   const previewImg = document.getElementById('gallery-preview-img');
 
-  if (!dropzone || !fileInput) return;
+  if (dropzone && fileInput) {
+    dropzone.addEventListener('click', () => fileInput.click());
 
-  dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
 
-  dropzone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropzone.classList.add('dragover');
-  });
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('dragover');
+    });
 
-  dropzone.addEventListener('dragleave', () => {
-    dropzone.classList.remove('dragover');
-  });
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleFile(e.dataTransfer.files[0]);
+      }
+    });
 
-  dropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropzone.classList.remove('dragover');
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleFile(e.target.files[0]);
+      }
+    });
+
+    function handleFile(file) {
+      if (!file.type.startsWith('image/')) {
+        alert('Please upload an image file (PNG, JPG, or WEBP).');
+        return;
+      }
+      pendingGalleryFileObj = file;
+      if (typeof FirebaseSync !== 'undefined' && FirebaseSync.compressImage) {
+        FirebaseSync.compressImage(file, 600, 0.75).then((dataUrl) => {
+          pendingGalleryImage = dataUrl;
+          if (previewBox && previewImg) {
+            previewImg.src = pendingGalleryImage;
+            previewBox.style.display = 'flex';
+          }
+        });
+      } else {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          pendingGalleryImage = event.target.result;
+          if (previewBox && previewImg) {
+            previewImg.src = pendingGalleryImage;
+            previewBox.style.display = 'flex';
+          }
+        };
+        reader.readAsDataURL(file);
+      }
     }
-  });
+  }
 
-  fileInput.addEventListener('change', (e) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
-    }
-  });
+  // Video Dropzone Setup
+  const videoDropzone = document.getElementById('gallery-video-dropzone');
+  const videoFileInput = document.getElementById('gallery-video-file-input');
+  const videoPreviewBox = document.getElementById('gallery-video-preview-box');
+  const videoPreviewPlayer = document.getElementById('gallery-video-preview-player');
+  const videoFilenameEl = document.getElementById('gallery-video-filename');
+  const videoUrlInput = document.getElementById('gallery-video-url-input');
 
-  function handleFile(file) {
-    if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file.');
-      return;
-    }
-    pendingGalleryFileObj = file;
-    if (typeof FirebaseSync !== 'undefined' && FirebaseSync.compressImage) {
-      FirebaseSync.compressImage(file, 600, 0.75).then((dataUrl) => {
-        pendingGalleryImage = dataUrl;
-        if (previewBox && previewImg) {
-          previewImg.src = pendingGalleryImage;
-          previewBox.style.display = 'flex';
-        }
-      });
-    } else {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        pendingGalleryImage = event.target.result;
-        if (previewBox && previewImg) {
-          previewImg.src = pendingGalleryImage;
-          previewBox.style.display = 'flex';
-        }
-      };
-      reader.readAsDataURL(file);
+  if (videoDropzone && videoFileInput) {
+    videoDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      videoDropzone.classList.add('dragover');
+    });
+
+    videoDropzone.addEventListener('dragleave', () => {
+      videoDropzone.classList.remove('dragover');
+    });
+
+    videoDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      videoDropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleVideoFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    videoFileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleVideoFile(e.target.files[0]);
+      }
+    });
+
+    function handleVideoFile(file) {
+      if (!file.type.startsWith('video/') && !file.name.match(/\.(mp4|webm|mov|mkv)$/i)) {
+        alert('Please select a valid video file (.mp4, .webm).');
+        return;
+      }
+      pendingGalleryVideoFileObj = file;
+      if (videoFilenameEl) videoFilenameEl.textContent = `Selected: ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`;
+      const url = URL.createObjectURL(file);
+      if (videoPreviewPlayer) {
+        videoPreviewPlayer.src = url;
+      }
+      if (videoPreviewBox) videoPreviewBox.style.display = 'flex';
+      if (videoUrlInput && !videoUrlInput.value) videoUrlInput.value = file.name;
     }
   }
 }
@@ -935,14 +1035,47 @@ function setupDropzone() {
 function handleAddGalleryItem(e) {
   e.preventDefault();
   const form = e.target;
+  const mediaType = form.mediaType ? form.mediaType.value : currentGalleryMediaType;
   const title = form.title.value.trim();
   const category = form.category.value;
   const description = form.description.value.trim();
-  const urlFallback = form.imageUrl.value.trim();
+  const urlFallback = form.imageUrl ? form.imageUrl.value.trim() : '';
+  const videoUrlInput = form.videoUrl ? form.videoUrl.value.trim() : '';
+  const posterUrlInput = form.posterUrl ? form.posterUrl.value.trim() : '';
+
+  if (mediaType === 'video') {
+    const videoUrl = videoUrlInput || (pendingGalleryVideoFileObj ? pendingGalleryVideoFileObj.name : 'Tafsir_Symposium_Outro_9x16.mp4');
+    const poster = posterUrlInput || 'SABCeR-06.png';
+
+    const newItem = {
+      id: `gal-vid-${Date.now()}`,
+      type: 'video',
+      videoUrl: videoUrl,
+      poster: poster,
+      image: poster,
+      title: title,
+      category: category || 'Videos',
+      timestamp: "Oct 21, 2026 • Live Video",
+      description: description
+    };
+
+    AdminState.gallery.unshift(newItem);
+    saveAdminState('gallery');
+    renderAdminGalleryTable();
+    renderAdminMetrics();
+
+    form.reset();
+    clearSelectedVideo();
+    setGalleryMediaType('photo');
+
+    showToast('Video Reel Published', `"${newItem.title}" added to public media gallery.`);
+    return;
+  }
 
   const createAndSaveGalleryItem = (imageUrl) => {
     const newItem = {
       id: `gal-${Date.now()}`,
+      type: 'image',
       title: title,
       category: category,
       image: imageUrl || 'assets/images/gallery-1.jpg',
@@ -997,7 +1130,7 @@ function renderAdminGalleryTable() {
   });
 
   if (countBadge) {
-    countBadge.textContent = `${filtered.length} of ${AdminState.gallery.length} Photos`;
+    countBadge.textContent = `${filtered.length} of ${AdminState.gallery.length} Media Assets`;
   }
 
   if (filtered.length === 0) {
@@ -1011,7 +1144,7 @@ function renderAdminGalleryTable() {
               <polyline points="21 15 16 10 5 21"></polyline>
             </svg>
             <strong style="font-size: 0.95rem; color: var(--neutral-dark-muted);">No Album Media Assets Found</strong>
-            <span style="font-size: 0.82rem;">${AdminState.gallery.length === 0 ? 'Use the form above to upload the first photograph to the public album.' : 'No media items match your search/filter criteria.'}</span>
+            <span style="font-size: 0.82rem;">${AdminState.gallery.length === 0 ? 'Use the form above to upload photographs or videos to the public album.' : 'No media items match your search/filter criteria.'}</span>
           </div>
         </td>
       </tr>
@@ -1020,23 +1153,35 @@ function renderAdminGalleryTable() {
   }
 
   tbody.innerHTML = filtered.map(item => {
+    const isVideo = item.type === 'video' || item.category === 'Videos' || (item.videoUrl && item.videoUrl.trim() !== '');
     const safeTitle = (item.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
     const safeDesc = (item.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    const safeImg = (item.image || '').replace(/'/g, "\\'");
+    const safeImg = (item.poster || item.image || 'element.png').replace(/'/g, "\\'");
+    const safeVideo = (item.videoUrl || '').replace(/'/g, "\\'");
+    const thumbSrc = item.poster || item.image || 'element.png';
+
     return `
       <tr>
         <td>
-          <img src="${item.image}" alt="${item.title}" class="gallery-admin-thumb" 
-            onclick="previewAdminPhoto('${safeImg}', '${safeTitle}', '${safeDesc}')" 
-            title="Click to preview full photo"
-            onerror="this.onerror=null; this.src='element.png';">
+          <div style="position: relative; display: inline-block; cursor: pointer;" onclick="previewAdminMedia('${safeImg}', '${safeTitle}', '${safeDesc}', ${isVideo}, '${safeVideo}')">
+            <img src="${thumbSrc}" alt="${item.title}" class="gallery-admin-thumb" 
+              title="Click to preview ${isVideo ? 'video' : 'photo'}"
+              onerror="this.onerror=null; this.src='element.png';">
+            ${isVideo ? `
+              <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.38); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: #FFFFFF;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+              </div>
+            ` : ''}
+          </div>
         </td>
         <td>
           <div style="font-weight: 800; color: var(--surface-deep-petrol); font-size: 0.92rem; line-height: 1.35; max-width: 250px;">
             ${item.title}
+            ${isVideo ? '<span style="display: inline-block; margin-left: 5px; font-size: 0.72rem; padding: 0.15rem 0.45rem; background: rgba(14, 84, 99, 0.12); color: var(--surface-deep-petrol); border-radius: 4px; font-weight: 700;">🎬 Video</span>' : ''}
           </div>
           <div style="font-size: 0.76rem; color: var(--neutral-mid); margin-top: 0.25rem;">
             Ref: <code style="font-size: 0.72rem; padding: 0.1rem 0.35rem; background: var(--surface-muted); border-radius: 4px;">${item.id}</code>
+            ${isVideo && item.videoUrl ? `<span style="margin-left: 5px; color: var(--primary-emerald); font-weight: 600;">• ${item.videoUrl}</span>` : ''}
           </div>
         </td>
         <td>
@@ -1064,16 +1209,40 @@ function renderAdminGalleryTable() {
   }).join('');
 }
 
-function previewAdminPhoto(src, title, desc) {
+function previewAdminMedia(src, title, desc, isVideo = false, videoSrc = '') {
   const modal = document.getElementById('admin-image-preview-modal');
   const imgEl = document.getElementById('admin-preview-modal-img');
+  const videoEl = document.getElementById('admin-preview-modal-video');
   const titleEl = document.getElementById('admin-preview-modal-title');
   const descEl = document.getElementById('admin-preview-modal-desc');
 
-  if (imgEl) imgEl.src = src;
+  if (isVideo && (videoSrc || src)) {
+    if (imgEl) imgEl.style.display = 'none';
+    if (videoEl) {
+      videoEl.src = videoSrc || src;
+      videoEl.style.display = 'block';
+      videoEl.load();
+      videoEl.play().catch(() => {});
+    }
+  } else {
+    if (videoEl) {
+      videoEl.pause();
+      videoEl.src = '';
+      videoEl.style.display = 'none';
+    }
+    if (imgEl) {
+      imgEl.src = src;
+      imgEl.style.display = 'block';
+    }
+  }
+
   if (titleEl) titleEl.textContent = title;
   if (descEl) descEl.textContent = desc;
   if (modal) modal.classList.add('open');
+}
+
+function previewAdminPhoto(src, title, desc) {
+  previewAdminMedia(src, title, desc, false, '');
 }
 
 function openEditGalleryModal(itemId) {
@@ -1085,14 +1254,19 @@ function openEditGalleryModal(itemId) {
 
   document.getElementById('edit-gallery-id').value = item.id;
   document.getElementById('edit-gallery-title').value = item.title;
-  document.getElementById('edit-gallery-category').value = item.category;
+  document.getElementById('edit-gallery-category').value = item.category || 'Videos';
   document.getElementById('edit-gallery-description').value = item.description || '';
   document.getElementById('edit-gallery-timestamp').value = item.timestamp || '';
-  document.getElementById('edit-gallery-image-url').value = item.image || '';
+  document.getElementById('edit-gallery-image-url').value = item.image || item.poster || '';
+
+  const videoInput = document.getElementById('edit-gallery-video-url');
+  if (videoInput) {
+    videoInput.value = item.videoUrl || '';
+  }
 
   const previewImg = document.getElementById('edit-gallery-preview-img');
   if (previewImg) {
-    previewImg.src = item.image || 'element.png';
+    previewImg.src = item.poster || item.image || 'element.png';
   }
 
   const fileInput = document.getElementById('edit-gallery-file-input');
@@ -1110,6 +1284,7 @@ function handleUpdateGalleryItem(e) {
   if (!item) return;
 
   const urlInput = form.image ? form.image.value.trim() : '';
+  const videoUrlInput = form.videoUrl ? form.videoUrl.value.trim() : '';
 
   const updateAsset = (imageUrl) => {
     item.title = form.title.value.trim();
@@ -1117,6 +1292,13 @@ function handleUpdateGalleryItem(e) {
     item.description = form.description ? form.description.value.trim() : '';
     item.timestamp = (form.timestamp && form.timestamp.value.trim()) ? form.timestamp.value.trim() : item.timestamp;
     item.image = imageUrl || item.image || 'assets/images/gallery-1.jpg';
+    if (videoUrlInput !== undefined) {
+      item.videoUrl = videoUrlInput;
+      if (item.videoUrl || item.category === 'Videos') {
+        item.type = 'video';
+        item.poster = item.image;
+      }
+    }
 
     saveAdminState('gallery');
     renderAdminGalleryTable();
@@ -1124,7 +1306,7 @@ function handleUpdateGalleryItem(e) {
     closeModal('gallery-edit-modal');
     pendingEditGalleryImage = '';
     pendingEditGalleryFileObj = null;
-    showToast('Album Asset Updated', `Photo "${item.title}" saved successfully.`);
+    showToast('Album Asset Updated', `Asset "${item.title}" saved successfully.`);
   };
 
   if (pendingEditGalleryFileObj && typeof FirebaseSync !== 'undefined' && FirebaseSync.uploadImage) {
@@ -1388,6 +1570,14 @@ function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) {
     modal.classList.remove('open');
+  }
+  if (modalId === 'admin-image-preview-modal') {
+    const vid = document.getElementById('admin-preview-modal-video');
+    if (vid) {
+      vid.pause();
+      vid.src = '';
+      vid.style.display = 'none';
+    }
   }
 }
 

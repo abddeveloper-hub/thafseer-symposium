@@ -220,6 +220,17 @@ const INITIAL_SPEAKERS = [
 
 const INITIAL_GALLERY = [
   {
+    id: "gal-vid-1",
+    type: "video",
+    videoUrl: "Tafsir_Symposium_Outro_9x16.mp4",
+    poster: "SABCeR-06.png",
+    image: "SABCeR-06.png",
+    title: "Symposium Highlights & Video Teaser Reel",
+    category: "Videos",
+    timestamp: "Oct 21, 2026 • Official Video",
+    description: "Official 9:16 vertical curtain raiser reel showcasing the vision, keynote themes, and academic conclave of Tafsir Symposium 2026."
+  },
+  {
     id: "gal-1",
     title: "Inaugural Plenary Assembly & Academic Conclave",
     category: "Inauguration",
