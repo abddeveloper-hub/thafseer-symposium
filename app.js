@@ -212,7 +212,7 @@ function navigateToSection(sectionId) {
 
 function handleHashChange() {
   const hash = window.location.hash.replace('#', '') || 'home';
-  if (['themes', 'scholars'].includes(hash)) {
+  if (['themes', 'scholars', 'brochure', 'terra-q'].includes(hash)) {
     navigateToSection(hash);
   } else {
     navigateTo(hash);
@@ -701,6 +701,27 @@ function closeModal(modalId) {
   if (modalId === 'lightbox-modal') {
     isBrochureLightbox = false;
   }
+}
+
+function openTerraQModal() {
+  const modal = document.getElementById('terraq-modal');
+  const iframe = document.getElementById('terraq-iframe');
+  const loader = document.getElementById('terraq-iframe-loader');
+  
+  if (modal && iframe) {
+    if (!iframe.src || iframe.src === 'about:blank' || !iframe.src.includes('terra-q')) {
+      if (loader) loader.style.display = 'flex';
+      iframe.onload = () => {
+        if (loader) loader.style.display = 'none';
+      };
+      iframe.src = 'https://terra-q-inky.vercel.app/';
+    }
+    modal.classList.add('open');
+  }
+}
+
+function closeTerraQModal() {
+  closeModal('terraq-modal');
 }
 
 function toggleMobileDrawer() {
